@@ -1,0 +1,21 @@
+name: toponomastica-stenico
+channels:
+  - conda-forge
+  - anaconda
+  - defaults
+dependencies:
+  - python=3.10
+  - pandas
+  - matplotlib
+  - geopandas
+  - shapely
+  - contextily
+  - requests
+  - beautifulsoup4
+  - scikit-learn
+  - pyproj
+  - ipykernel
+  - spacy
+  - pip
+  - pip:
+    - wordcloud
