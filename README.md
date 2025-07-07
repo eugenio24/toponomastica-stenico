@@ -23,7 +23,7 @@ This repository includes:
 - Enhanced dataset with cleaned entries, elevation data, and cluster assignments, tags
 - Exploratory data analysis notebook  
   * [Data analysis notebook](data-utils/data-analysis-cleaning.ipynb)
-- An Android app for data visualization
+- An Android app for data visualization: see the [App section](#app)
 
 ---
 
@@ -61,7 +61,29 @@ conda activate toponimi-stenico
 ---
 
 ## App
+This app is a hobby project, built for personal use. It is not a finished product, and may contain bugs or incomplete features.
 
-TODO
-- APK
-- screenshots
+### Installation
+1. Download the latest APK from the Github [Releases](https://github.com/eugenio24/toponomastica-stenico/releases) section
+2. Open the APK file on your device to install.
+3. If prompted, allow installation from unknown sources or untrusted apps in your device settings.
+    - This setting is usually found under: `Settings → Apps & notifications → Special app access → Install unknown apps`
+    - This is required because the app is not distributed through the Google Play Store
+
+### Features
+- Map view with displayed toponyms
+- Search page with filtering and sorting options
+- Detail page for each toponym with relevant informations
+- Basic GPS localization to show the user's current position
+- Offline support for both the map and data
+
+### Screenshots
+### Screenshots
+
+| Map View | Filters |
+|----------|---------|
+| ![Map View](screenshots/map_view.jpg) | ![Filters](screenshots/filters.jpg) |
+
+| Search View | Detail View |
+|-------------|-------------|
+| ![Search View](screenshots/search_view.jpg) | ![Detail View](screenshots/detail_view.jpg) |
