@@ -78,7 +78,6 @@ This app is a hobby project, built for personal use. It is not a finished produc
 - Offline support for both the map and data
 
 ### Screenshots
-### Screenshots
 
 | Map View | Filters |
 |----------|---------|
