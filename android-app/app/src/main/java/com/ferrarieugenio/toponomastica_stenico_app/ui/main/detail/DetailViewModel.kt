@@ -18,9 +18,11 @@ class DetailViewModel @Inject constructor(
     private val _toponym = MutableLiveData<Toponym>()
     val toponym: LiveData<Toponym> = _toponym
 
+    private val _neighbors = MutableLiveData<List<Toponym>>()
+    val neighbors: LiveData<List<Toponym>> = _neighbors
+
     fun setToponym(data: Toponym) {
         _toponym.value = data
+        _neighbors.value = repository.getToponymNeighbors(_toponym.value!!)
     }
-
-    // Add more logic later (e.g., related data, save, etc.)
 }

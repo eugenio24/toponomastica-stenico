@@ -3,14 +3,11 @@ package com.ferrarieugenio.toponomastica_stenico_app.ui.main
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.ferrarieugenio.toponomastica_stenico_app.R
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.ActivityMainBinding
-import com.ferrarieugenio.toponomastica_stenico_app.ui.main.map.MapFragment
-import com.ferrarieugenio.toponomastica_stenico_app.ui.main.search.SearchFragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

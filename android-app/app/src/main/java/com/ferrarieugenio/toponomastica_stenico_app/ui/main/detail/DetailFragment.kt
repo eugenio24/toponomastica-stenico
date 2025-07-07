@@ -6,8 +6,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.FragmentDetailBinding
+import com.ferrarieugenio.toponomastica_stenico_app.ui.adapters.NeighborAdapter
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -39,18 +42,75 @@ class DetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.toolbar.apply {
+            title = args.toponym.nome
+            setNavigationOnClickListener {
+                findNavController().navigateUp()
+            }
+        }
+
         viewModel.toponym.observe(viewLifecycleOwner) { toponym ->
-            binding.nomeTextView.text = toponym.nome
-            binding.formaUfficialeTextView.text = toponym.forma_ufficiale ?: "N/A"
-            binding.comuneTextView.text = toponym.comune
+            if (!toponym.forma_ufficiale.isNullOrBlank()) {
+                binding.formaUfficialeTextView.text = toponym.forma_ufficiale
+            } else {
+                binding.formaUfficialeLabel.visibility = View.GONE
+                binding.formaUfficialeTextView.visibility = View.GONE
+            }
+
             binding.descrizioneTextView.text = toponym.descrizione
+
             binding.quotaTextView.text = "${toponym.quota} m"
+
             binding.latlonTextView.text = "Lat: ${toponym.lat}, Lon: ${toponym.lon}"
-            binding.tagsTextView.text = toponym.tags.joinToString(", ")
+
+            if (toponym.tags.isNotEmpty()) {
+                binding.tagsChipGroup.removeAllViews()
+                toponym.tags.forEach { tag ->
+                    val chip = com.google.android.material.chip.Chip(requireContext()).apply {
+                        text = tag
+                        isClickable = false
+                        isCheckable = false
+                    }
+                    binding.tagsChipGroup.addView(chip)
+                }
+            } else {
+                binding.tagsLabel.visibility = View.GONE
+                binding.tagsChipGroup.visibility = View.GONE
+            }
+
             binding.clusterTextView.text = toponym.cluster
+
             binding.hcClusterTextView.text = toponym.hc_cluster
-            binding.variantiTextView.text = toponym.varianti?.joinToString(", ") ?: "N/A"
-            binding.neighborsTextView.text = toponym.closest_5_neighbors_ids.joinToString(", ")        }
+
+            if (!toponym.varianti.isNullOrEmpty()) {
+                val bulletList = toponym.varianti.joinToString("\n") { "• $it" }
+                binding.variantiTextView.text = bulletList
+            } else {
+                binding.variantiLabel.visibility = View.GONE
+                binding.variantiTextView.visibility = View.GONE
+            }
+
+            binding.viewOnMapButton.setOnClickListener {
+                val action = DetailFragmentDirections.actionDetailFragmentToMapFragment(toponym)
+                findNavController().navigate(action)
+            }
+        }
+
+        binding.neighborsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        viewModel.neighbors.observe(viewLifecycleOwner) { neighbors ->
+            if (neighbors.isNotEmpty()) {
+                binding.neighborsRecyclerView.apply {
+                    adapter = NeighborAdapter(neighbors) { clickedNeighbor ->
+                        val action = DetailFragmentDirections.actionDetailFragmentSelf(clickedNeighbor)
+                        findNavController().navigate(action)
+                    }
+                    visibility = View.VISIBLE
+                }
+            } else {
+                binding.neighborsLabel.visibility = View.GONE
+                binding.neighborsRecyclerView.visibility = View.GONE
+            }
+        }
     }
 
     override fun onDestroyView() {

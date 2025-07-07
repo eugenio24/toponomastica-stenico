@@ -5,8 +5,55 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- MapView is still added programmatically -->
+    <!-- MapLibre MapView -->
+    <org.maplibre.android.maps.MapView
+        android:id="@+id/mapView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
+    <LinearLayout
+        android:id="@+id/fab_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_my_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Enable location"
+            android:src="@drawable/ic_enable_location" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabZoomToLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:contentDescription="Zoom to location"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_zoom_to_location" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabDisableLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:contentDescription="Disable location"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_disable_location" />
+
+    </LinearLayout>
+
+
+    <!-- Bottom marker preview container -->
     <LinearLayout
         android:id="@+id/preview_container"
         android:layout_width="0dp"
@@ -43,7 +90,7 @@
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:tint="?attr/colorOnSurface"  />
+                android:tint="?attr/colorOnSurface" />
 
             <ImageButton
                 android:id="@+id/marker_dismiss_button"
@@ -53,7 +100,7 @@
                 android:src="@drawable/ic_close"
                 android:contentDescription="Close"
                 android:elevation="4dp"
-                android:tint="?attr/colorOnSurface" />
+                app:tint="?attr/colorOnSurface" />
         </LinearLayout>
 
         <Button
@@ -63,4 +110,25 @@
             android:text="Dettagli"
             android:textAllCaps="false" />
     </LinearLayout>
+
+    <!-- Loading overlay -->
+    <FrameLayout
+        android:id="@+id/progressOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#80000000"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true" />
+    </FrameLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

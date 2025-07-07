@@ -1,40 +1,71 @@
 package com.ferrarieugenio.toponomastica_stenico_app.ui.main.map
 
 import android.annotation.SuppressLint
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.ferrarieugenio.toponomastica_stenico_app.R
+import androidx.navigation.fragment.findNavController
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.FragmentMapBinding
-import com.ferrarieugenio.toponomastica_stenico_app.ui.components.ToponymMarker
+import com.ferrarieugenio.toponomastica_stenico_app.util.LocationHelper
+import com.ferrarieugenio.toponomastica_stenico_app.util.MapConfig
+import com.ferrarieugenio.toponomastica_stenico_app.util.MapMarkerManager
+import com.ferrarieugenio.toponomastica_stenico_app.util.MapStyleManager
+import com.ferrarieugenio.toponomastica_stenico_app.util.SwipeGestureListener
+import com.ferrarieugenio.toponomastica_stenico_app.util.ViewAnimatorUtils
 import dagger.hilt.android.AndroidEntryPoint
-import org.mapsforge.core.model.LatLong
-import org.mapsforge.map.android.graphics.AndroidGraphicFactory
-import org.mapsforge.map.android.util.AndroidUtil
-import org.mapsforge.map.android.view.MapView
-import org.mapsforge.map.layer.overlay.Marker
-import org.mapsforge.map.layer.renderer.TileRendererLayer
-import org.mapsforge.map.reader.MapFile
-import org.mapsforge.map.rendertheme.InternalRenderTheme.*
-import java.io.File
-import androidx.core.view.isVisible
-import androidx.navigation.fragment.findNavController
+import org.maplibre.android.MapLibre
+import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.Style
 
 @AndroidEntryPoint
 class MapFragment : Fragment() {
-
     private lateinit var mapView: MapView
+    private lateinit var mapLibreMap: MapLibreMap
+
+    private var onMapReady: (() -> Unit)? = null
+    private var isMapFullyReady = false
+
+    private lateinit var markerManager: MapMarkerManager
+
+    private lateinit var locationHelper: LocationHelper
+    private var isLocationActive = false
+
     private val viewModel: MapViewModel by viewModels()
+
+    private var pendingZoom = false
 
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
 
-    private var currentSelectedToponym: Toponym? = null
+    private val frameRenderListener = object : MapView.OnDidFinishRenderingFrameListener {
+        override fun onDidFinishRenderingFrame(
+            fully: Boolean,
+            frameEncodingTime: Double,
+            frameRenderingTime: Double
+        ) {
+            if (fully) {
+                binding.progressOverlay.visibility = View.GONE
+                binding.mapView.removeOnDidFinishRenderingFrameListener(this)
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        MapLibre.getInstance(requireContext())
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,118 +76,300 @@ class MapFragment : Fragment() {
         return binding.root
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        AndroidGraphicFactory.createInstance(requireContext().applicationContext)
-
-        mapView = MapView(requireContext())
-        (view as ViewGroup).addView(mapView, 0) // Add mapView as first child
-
+        mapView = binding.mapView
         setupMap()
-        observeToponyms()
 
-        mapView.setOnTouchListener { _, _ ->
-            if (binding.previewContainer.isVisible) {
-                binding.previewContainer.visibility = View.GONE
+        isLocationActive = savedInstanceState?.getBoolean("locationActive") ?: false
+
+        onMapReady = {
+            observeToponyms()
+            observeSelectedToponym()
+            setupUI()
+
+            val toponym = consumeParcelableArgOnce<Toponym>("toponym")
+            if (toponym != null) {
+                pendingZoom = true
+                viewModel.selectToponymById(toponym.id)
             }
-            false
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupUI() {
+        binding.markerDismissButton.setOnClickListener {
+            viewModel.clearSelectedToponym()
         }
 
-        binding.markerDismissButton.setOnClickListener {
-            binding.previewContainer.visibility = View.GONE
-            currentSelectedToponym = null
+        mapLibreMap.addOnMapClickListener {
+            viewModel.clearSelectedToponym()
+            true
+        }
+
+        binding.markerDetailsButton.setOnClickListener {
+            viewModel.selectedToponym.value?.let { navigateToDetail(it) }
+        }
+
+        binding.previewContainer.setOnTouchListener(
+            SwipeGestureListener(
+                context = requireContext(),
+                onSwipeUp = {
+                    viewModel.selectedToponym.value?.let { navigateToDetail(it) }
+                },
+                onSwipeDown = {
+                    viewModel.clearSelectedToponym()
+                }
+            )
+        )
+
+        binding.fabMyLocation.setOnClickListener {
+            if (::mapLibreMap.isInitialized && mapLibreMap.style != null){
+                locationHelper = LocationHelper(
+                    context = requireContext(),
+                    map = mapLibreMap,
+                    requestPermissionLauncher = requestLocationPermissionLauncher
+                )
+
+                locationHelper.checkAndEnableLocation(
+                    onPermissionDenied = {
+                        isLocationActive = false
+                        Toast.makeText(requireContext(), "Location permission denied", Toast.LENGTH_SHORT).show()
+                    },
+                    onLocationAvailable = {
+                        isLocationActive = true
+                        binding.fabMyLocation.visibility = View.GONE
+                        binding.fabZoomToLocation.visibility = View.VISIBLE
+                        binding.fabDisableLocation.visibility = View.VISIBLE
+                    }
+                )
+            }
+        }
+
+        binding.fabZoomToLocation.setOnClickListener {
+            locationHelper.zoomToUserLocation()
+        }
+
+        binding.fabDisableLocation.setOnClickListener {
+            locationHelper.disableLocationComponent()
+            binding.fabZoomToLocation.visibility = View.GONE
+            binding.fabDisableLocation.visibility = View.GONE
+            binding.fabMyLocation.visibility = View.VISIBLE
+            isLocationActive = false
+        }
+
+        if (isLocationActive) {
+            binding.fabMyLocation.visibility = View.GONE
+            binding.fabZoomToLocation.visibility = View.VISIBLE
+            binding.fabDisableLocation.visibility = View.VISIBLE
+        } else {
+            binding.fabMyLocation.visibility = View.VISIBLE
+            binding.fabZoomToLocation.visibility = View.GONE
+            binding.fabDisableLocation.visibility = View.GONE
+        }
+    }
+
+    private val requestLocationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            locationHelper.checkAndEnableLocation()
+        } else {
+            Toast.makeText(requireContext(), "Autorizzazione alla localizzazione negata", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun setupMap() {
-        val mapFile = File(requireContext().filesDir, "stenico.map")
-        if (!mapFile.exists()) {
-            requireContext().assets.open("stenico.map").use { input ->
-                mapFile.outputStream().use { output ->
-                    input.copyTo(output)
+        val styleUri = when (val result = MapStyleManager(requireContext()).setupStyle()) {
+            is MapStyleManager.StyleSetupResult.Success -> result.styleFile
+            is MapStyleManager.StyleSetupResult.Error -> throw result.exception
+        }
+
+        showLoading()
+
+        mapView.getMapAsync { map ->
+            mapLibreMap = map
+            map.setStyle(Style.Builder().fromUri(Uri.fromFile(styleUri).toString())) { style ->
+                markerManager = MapMarkerManager(
+                    context = requireContext(),
+                    mapView = mapView,
+                    map = mapLibreMap,
+                    style = style,
+                    onMarkerClick = { toponymId ->
+                        viewModel.selectToponymById(toponymId)
+                    }
+                )
+                markerManager.initialize()
+
+                restoreMapState()
+
+                mapView.addOnDidFinishRenderingFrameListener(renderListener)
+            }
+
+            mapLibreMap.setLatLngBoundsForCameraTarget(MapConfig.LOCATION_BOUNDS_WITH_BUFFER)
+            mapLibreMap.setMinZoomPreference(MapConfig.MIN_ZOOM_BOUND)
+            mapLibreMap.setMaxZoomPreference(MapConfig.MAX_ZOOM_BOUND)
+        }
+    }
+
+    private fun waitForNextFullRender(onComplete: () -> Unit) {
+        val listener = object : MapView.OnDidFinishRenderingFrameListener {
+            override fun onDidFinishRenderingFrame(
+                fully: Boolean,
+                frameEncodingTime: Double,
+                frameRenderingTime: Double
+            ) {
+                if (fully) {
+                    binding.mapView.removeOnDidFinishRenderingFrameListener(this)
+                    onComplete()
                 }
             }
         }
+        binding.mapView.addOnDidFinishRenderingFrameListener(listener)
+    }
 
-        val map = MapFile(mapFile)
-
-        val tileCache = AndroidUtil.createTileCache(
-            requireContext(),
-            "mapcache",
-            mapView.model.displayModel.tileSize,
-            1f,
-            mapView.model.frameBufferModel.overdrawFactor
-        )
-
-        val tileRendererLayer = TileRendererLayer(
-            tileCache,
-            map,
-            mapView.model.mapViewPosition,
-            AndroidGraphicFactory.INSTANCE
-        )
-        tileRendererLayer.setXmlRenderTheme(DEFAULT)
-        mapView.layerManager.layers.add(tileRendererLayer)
-
-        // todo change to constant or parameter, parameter also for map file
-        mapView.setCenter(LatLong(46.052168, 10.8540886))
-        mapView.setZoomLevel(14)
-
-        // todo add pan and zoom constraints to remain inside the downloaded map
+    private val renderListener = object : MapView.OnDidFinishRenderingFrameListener {
+        override fun onDidFinishRenderingFrame(
+            fully: Boolean,
+            frameEncodingTime: Double,
+            frameRenderingTime: Double
+        ) {
+            if (fully) {
+                mapView.removeOnDidFinishRenderingFrameListener(this)
+                isMapFullyReady = true
+                onMapReady?.invoke()
+                onMapReady = null
+            }
+        }
     }
 
     private fun observeToponyms() {
         viewModel.toponyms.observe(viewLifecycleOwner) { toponyms ->
-            addMarkers(toponyms)
+            if (isMapFullyReady && ::markerManager.isInitialized) {
+                displayToponyms(toponyms) {
+                    waitForNextFullRender {
+                        hideLoading()
+                    }
+                }
+            }
         }
     }
 
-    private fun addMarkers(toponyms: List<Toponym>) {
-        val layers = mapView.layerManager.layers
+    private fun displayToponyms(toponyms: List<Toponym>, onDone: () -> Unit) {
+        val selectedId = viewModel.selectedToponym.value?.id
+        markerManager.addMarkers(toponyms, selectedId) {
+            onDone()
+        }
+    }
 
-        layers.filterIsInstance<Marker>().forEach { layers.remove(it) }
+    private fun showLoading() {
+        binding.progressOverlay.visibility = View.VISIBLE
+    }
 
-        toponyms.forEach { toponym ->
-            val latLong = LatLong(toponym.lat, toponym.lon)
-            val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_marker)
+    private fun hideLoading() {
+        binding.mapView.addOnDidFinishRenderingFrameListener(frameRenderListener)
+    }
 
-            if (drawable != null) {
-                val bitmap = AndroidGraphicFactory.convertToBitmap(drawable)
+    private fun observeSelectedToponym() {
+        viewModel.selectedToponym.observe(viewLifecycleOwner) { toponym ->
+            if (!::markerManager.isInitialized) {
+                return@observe
+            }
 
-                val marker = ToponymMarker(
-                    latLong, bitmap, 0, -bitmap.height, toponym
-                )
+            markerManager.updateSelection(viewModel.previousSelectedId, toponym?.id)
 
-                marker.setOnTabAction(Runnable {
-                    if (currentSelectedToponym != toponym) {
-                        currentSelectedToponym = toponym
-                        showMarkerInfo(toponym)
-                    }
-                })
-
-                mapView.layerManager.layers.add(marker)
+            if (toponym != null) {
+                showMarkerInfo(toponym)
+                if (pendingZoom){
+                    zoomToToponym(toponym.lat, toponym.lon)
+                    pendingZoom = false
+                }
+            } else {
+                binding.previewContainer.visibility = View.GONE
             }
         }
-
-        mapView.invalidate()
-        mapView.repaint()
     }
 
     private fun showMarkerInfo(toponym: Toponym) {
-        binding.previewContainer.visibility = View.VISIBLE
+        ViewAnimatorUtils.showBottomPanel(binding.previewContainer)
         binding.markerNameText.text = toponym.nome
+    }
 
-        binding.markerDetailsButton.setOnClickListener {
+    private fun zoomToToponym(lat: Double, lon: Double){
+        val cameraPosition = CameraPosition.Builder()
+            .target(LatLng(lat, lon))
+            .zoom(16.0)
+            .build()
+        mapLibreMap.cameraPosition = cameraPosition
+    }
+
+    private fun navigateToDetail(toponym: Toponym) {
+        ViewAnimatorUtils.hideBottomPanel(binding.previewContainer) {
             val action = MapFragmentDirections.actionMapFragmentToDetailFragment(toponym)
             findNavController().navigate(action)
         }
     }
 
+    private fun restoreMapState() {
+        val savedPosition = viewModel.getSavedCameraPosition()
+        if (savedPosition != null) {
+            mapLibreMap.cameraPosition = savedPosition
+        } else {
+            val cameraPosition = CameraPosition.Builder()
+                .target(MapConfig.DEFAULT_LOCATION)
+                .zoom(MapConfig.DEFAULT_ZOOM)
+                .build()
+            mapLibreMap.cameraPosition = cameraPosition
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean("locationActive", isLocationActive)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mapView.onStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mapView.onResume()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mapView.onStop()
+    }
+
+    override fun onPause() {
+        mapView.onPause()
+        if (::mapLibreMap.isInitialized) {
+            val cameraPosition = mapLibreMap.cameraPosition
+            viewModel.saveCameraPosition(cameraPosition)
+        }
+        super.onPause()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
-        mapView.destroyAll()
-        AndroidGraphicFactory.clearResourceMemoryCache()
+        if (::markerManager.isInitialized) {
+            markerManager.onDestroy()
+        }
+        mapView.onDestroy()
         _binding = null
+    }
+
+    inline fun <reified T : Parcelable> Fragment.consumeParcelableArgOnce(key: String): T? {
+        val result: T? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arguments?.getParcelable(key, T::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            arguments?.getParcelable(key) as? T
+        }
+        arguments?.remove(key)
+        return result
     }
 }
