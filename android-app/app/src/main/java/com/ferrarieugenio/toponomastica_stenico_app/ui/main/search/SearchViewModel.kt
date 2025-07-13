@@ -68,7 +68,8 @@ class SearchViewModel @Inject constructor(
     private fun Toponym.matchesQuery(query: String): Boolean {
         return nome.lowercase().contains(query) ||
                 forma_ufficiale?.lowercase()?.contains(query) == true ||
-                varianti?.any { it.lowercase().contains(query) } == true
+                varianti?.any { it.lowercase().contains(query) } == true ||
+                descrizione.lowercase().contains(query)
     }
 
     private fun Toponym.matchesFilters(filters: AdvancedFilters): Boolean {

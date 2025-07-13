@@ -65,7 +65,7 @@ class AdvancedSearchDialogFragment(
         setupQuotaControls()
 
         binding.selectClustersButton.setOnClickListener { showMultiChoiceDialog(
-                "Seleziona cluster", availableClusters, selectedClusters) { selected ->
+                "Seleziona Sezione", availableClusters, selectedClusters) { selected ->
                 selectedClusters.clear()
                 selectedClusters.addAll(selected)
                 updateClusterChips()
@@ -73,7 +73,7 @@ class AdvancedSearchDialogFragment(
         }
 
         binding.selectHcClustersButton.setOnClickListener { showMultiChoiceDialog(
-                "Seleziona HC cluster", availableHcClusters, selectedHcClusters) { selected ->
+                "Seleziona Zona", availableHcClusters, selectedHcClusters) { selected ->
                 selectedHcClusters.clear()
                 selectedHcClusters.addAll(selected)
                 updateHcClusterChips()
@@ -178,7 +178,7 @@ class AdvancedSearchDialogFragment(
     ) {
         val selected = selectedItems.toMutableList()
         val checkedItems = options.map { selected.contains(it) }.toBooleanArray()
-        AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext(), R.style.MyAlertDialogTheme)
             .setTitle(title)
             .setMultiChoiceItems(options.toTypedArray(), checkedItems) { _, which, isChecked ->
                 if (isChecked) selected.add(options[which]) else selected.remove(options[which])

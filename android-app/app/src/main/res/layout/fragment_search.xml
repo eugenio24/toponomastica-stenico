@@ -11,7 +11,7 @@
         android:id="@+id/searchTextInputLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Cerca toponimo …"
+        android:hint="Cerca per nome, descrizione, ..."
         app:endIconMode="clear_text"
         app:boxBackgroundMode="outline"
         app:boxCornerRadiusTopStart="12dp"
@@ -100,4 +100,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:hideScrollbar="true" />
+
+    <TextView
+        android:id="@+id/noResultsTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nessun risultato trovato"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/cl_itemCountDivider"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
 </androidx.constraintlayout.widget.ConstraintLayout>

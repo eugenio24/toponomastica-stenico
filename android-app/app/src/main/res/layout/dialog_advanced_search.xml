@@ -184,7 +184,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="HC Cluster selezionati"
+                android:text="Zone selezionate"
                 android:textAppearance="?attr/textAppearanceBodyLarge"
                 android:layout_marginTop="16dp" />
 
@@ -201,7 +201,7 @@
                 android:id="@+id/noHcClusterHint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Nessun hc cluster selezionato – verranno mostrati tutti"
+                android:text="Nessuna zona selezionata – verranno mostrate tutte"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="@color/black"
                 android:visibility="gone"
@@ -211,7 +211,7 @@
                 android:id="@+id/selectHcClustersButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Seleziona HC cluster"
+                android:text="Seleziona una zona"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_marginTop="8dp" />
         </LinearLayout>

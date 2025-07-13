@@ -7,7 +7,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.FragmentSearchBinding
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,6 +21,9 @@ import com.ferrarieugenio.toponomastica_stenico_app.util.SortDirection
 import com.ferrarieugenio.toponomastica_stenico_app.util.SortField
 import com.ferrarieugenio.toponomastica_stenico_app.util.SortOption
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class SearchFragment : Fragment() {
@@ -28,6 +33,8 @@ class SearchFragment : Fragment() {
 
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
+
+    private var searchJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -50,8 +57,13 @@ class SearchFragment : Fragment() {
 
         viewModel.filteredToponyms.observe(viewLifecycleOwner) { toponyms ->
             adapter.updateList(toponyms)
+            viewModel.currentQuery.value?.let { adapter.setQuery(it) }
+
             binding.itemCountTextView.text = "${toponyms.size} risultati"
             binding.toponymRecyclerView.scrollToPosition(0)
+
+            binding.noResultsTextView.isVisible = toponyms.isEmpty()
+            binding.toponymRecyclerView.isVisible = toponyms.isNotEmpty()
         }
 
         binding.filtersButton.setOnClickListener {
@@ -73,7 +85,12 @@ class SearchFragment : Fragment() {
 
         binding.searchEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                viewModel.filter(query = s.toString())
+                val query = s.toString()
+                searchJob?.cancel()
+                searchJob = viewLifecycleOwner.lifecycleScope.launch {
+                    delay(200) // debounce delay 200 ms
+                    viewModel.filter(query = query)
+                }
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { /* No-op */ }
