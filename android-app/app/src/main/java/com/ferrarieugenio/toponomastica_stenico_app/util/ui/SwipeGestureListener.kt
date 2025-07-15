@@ -1,4 +1,4 @@
-package com.ferrarieugenio.toponomastica_stenico_app.util
+package com.ferrarieugenio.toponomastica_stenico_app.util.ui
 
 import android.annotation.SuppressLint
 import android.content.Context

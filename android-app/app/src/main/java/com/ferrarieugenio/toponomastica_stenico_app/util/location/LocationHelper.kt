@@ -1,4 +1,4 @@
-package com.ferrarieugenio.toponomastica_stenico_app.util
+package com.ferrarieugenio.toponomastica_stenico_app.util.location
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -6,12 +6,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.annotation.RequiresPermission
 import androidx.core.content.ContextCompat
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.location.LocationComponentActivationOptions
-import org.maplibre.android.location.engine.LocationEngineRequest
 import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.maps.MapLibreMap

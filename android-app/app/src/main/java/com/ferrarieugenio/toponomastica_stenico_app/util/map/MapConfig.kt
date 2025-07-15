@@ -1,4 +1,4 @@
-package com.ferrarieugenio.toponomastica_stenico_app.util
+package com.ferrarieugenio.toponomastica_stenico_app.util.map
 
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds

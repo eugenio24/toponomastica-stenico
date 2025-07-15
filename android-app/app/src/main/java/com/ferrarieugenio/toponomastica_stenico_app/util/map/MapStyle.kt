@@ -1,4 +1,4 @@
-package com.ferrarieugenio.toponomastica_stenico_app.util
+package com.ferrarieugenio.toponomastica_stenico_app.util.map
 
 sealed class MapStyle(val name: String) {
     data object OSM : MapStyle("OSM")

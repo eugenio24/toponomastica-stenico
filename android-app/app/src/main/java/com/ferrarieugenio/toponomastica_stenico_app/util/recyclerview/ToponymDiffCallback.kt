@@ -1,4 +1,4 @@
-package com.ferrarieugenio.toponomastica_stenico_app.util
+package com.ferrarieugenio.toponomastica_stenico_app.util.recyclerview
 
 import androidx.recyclerview.widget.DiffUtil
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym

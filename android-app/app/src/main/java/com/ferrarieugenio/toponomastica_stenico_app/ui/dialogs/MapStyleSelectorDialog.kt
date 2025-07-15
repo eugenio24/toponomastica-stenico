@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.TypedValue
 import android.view.LayoutInflater
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.DialogMapStyleSelectorBinding
-import com.ferrarieugenio.toponomastica_stenico_app.util.MapStyle
+import com.ferrarieugenio.toponomastica_stenico_app.util.map.MapStyle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class MapStyleSelectorDialog(

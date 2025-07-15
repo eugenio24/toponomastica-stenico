@@ -1,4 +1,4 @@
-package com.ferrarieugenio.toponomastica_stenico_app.util
+package com.ferrarieugenio.toponomastica_stenico_app.util.filters
 
 data class AdvancedFilters(
     val minQuota: Int? = null,

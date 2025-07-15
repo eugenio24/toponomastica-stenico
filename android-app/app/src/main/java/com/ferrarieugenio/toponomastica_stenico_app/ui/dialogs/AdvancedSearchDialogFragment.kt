@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.ferrarieugenio.toponomastica_stenico_app.R
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.DialogAdvancedSearchBinding
-import com.ferrarieugenio.toponomastica_stenico_app.util.AdvancedFilters
+import com.ferrarieugenio.toponomastica_stenico_app.util.filters.AdvancedFilters
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 

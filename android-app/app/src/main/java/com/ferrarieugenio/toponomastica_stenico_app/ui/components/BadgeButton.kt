@@ -1,14 +1,16 @@
 package com.ferrarieugenio.toponomastica_stenico_app.ui.components
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ReplacementSpan
 import android.util.AttributeSet
-import androidx.core.content.ContextCompat
-import com.google.android.material.button.MaterialButton
 import androidx.core.content.withStyledAttributes
+import com.google.android.material.button.MaterialButton
 
 class BadgeButton @JvmOverloads constructor(
     context: Context,

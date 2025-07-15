@@ -6,10 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
 import com.ferrarieugenio.toponomastica_stenico_app.data.repository.ToponymRepository
-import com.ferrarieugenio.toponomastica_stenico_app.util.AdvancedFilters
-import com.ferrarieugenio.toponomastica_stenico_app.util.SortDirection
-import com.ferrarieugenio.toponomastica_stenico_app.util.SortField
-import com.ferrarieugenio.toponomastica_stenico_app.util.SortOption
+import com.ferrarieugenio.toponomastica_stenico_app.util.filters.AdvancedFilters
+import com.ferrarieugenio.toponomastica_stenico_app.util.filters.SortDirection
+import com.ferrarieugenio.toponomastica_stenico_app.util.filters.SortField
+import com.ferrarieugenio.toponomastica_stenico_app.util.filters.SortOption
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

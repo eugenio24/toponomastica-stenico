@@ -1,15 +1,15 @@
 package com.ferrarieugenio.toponomastica_stenico_app.ui.main.map
 
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
 import com.ferrarieugenio.toponomastica_stenico_app.data.repository.ToponymRepository
-import com.ferrarieugenio.toponomastica_stenico_app.util.MapStyle
+import com.ferrarieugenio.toponomastica_stenico_app.util.map.MapStyle
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import org.maplibre.android.camera.CameraPosition
 import javax.inject.Inject
 

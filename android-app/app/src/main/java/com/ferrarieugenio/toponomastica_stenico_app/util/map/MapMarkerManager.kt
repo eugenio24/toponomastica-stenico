@@ -1,4 +1,4 @@
-package com.ferrarieugenio.toponomastica_stenico_app.util
+package com.ferrarieugenio.toponomastica_stenico_app.util.map
 
 import android.content.Context
 import androidx.core.content.res.ResourcesCompat
@@ -6,7 +6,6 @@ import com.ferrarieugenio.toponomastica_stenico_app.R
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
 import com.google.gson.JsonObject
 import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style

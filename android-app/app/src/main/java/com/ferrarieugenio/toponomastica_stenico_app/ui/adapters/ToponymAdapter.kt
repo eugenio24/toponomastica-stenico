@@ -1,6 +1,5 @@
 package com.ferrarieugenio.toponomastica_stenico_app.ui.adapters
 
-import android.annotation.SuppressLint
 import android.graphics.Typeface
 import android.text.SpannableString
 import android.text.Spanned
@@ -13,9 +12,9 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.ferrarieugenio.toponomastica_stenico_app.R
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
-import com.ferrarieugenio.toponomastica_stenico_app.util.SortField
-import com.ferrarieugenio.toponomastica_stenico_app.util.SortOption
-import com.ferrarieugenio.toponomastica_stenico_app.util.ToponymDiffCallback
+import com.ferrarieugenio.toponomastica_stenico_app.util.filters.SortField
+import com.ferrarieugenio.toponomastica_stenico_app.util.filters.SortOption
+import com.ferrarieugenio.toponomastica_stenico_app.util.recyclerview.ToponymDiffCallback
 import com.l4digital.fastscroll.FastScroller
 
 class ToponymAdapter(
