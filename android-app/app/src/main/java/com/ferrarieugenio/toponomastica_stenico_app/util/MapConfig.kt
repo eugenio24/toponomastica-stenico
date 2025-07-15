@@ -8,7 +8,7 @@ object MapConfig {
     const val DEFAULT_ZOOM = 14.0
 
     // todo adjust bounds if needed
-    val LOCATION_BOUNDS = LatLngBounds.from(
+    private val LOCATION_BOUNDS = LatLngBounds.from(
         46.276000, 11.060000,
         45.978000, 10.655000
     )
@@ -16,10 +16,10 @@ object MapConfig {
         bufferLat = 0.05,
         bufferLon = 0.05
     )
-    val MIN_ZOOM_BOUND = 12.0
-    val MAX_ZOOM_BOUND = 17.0
+    const val MIN_ZOOM_BOUND = 12.0
+    const val MAX_ZOOM_BOUND = 17.0
 
-    fun LatLngBounds.withBuffer(bufferLat: Double, bufferLon: Double): LatLngBounds {
+    private fun LatLngBounds.withBuffer(bufferLat: Double, bufferLon: Double): LatLngBounds {
         val bufferedNorth = this.northEast.latitude - bufferLat
         val bufferedEast = this.northEast.longitude - bufferLon
         val bufferedSouth = this.southWest.latitude + bufferLat

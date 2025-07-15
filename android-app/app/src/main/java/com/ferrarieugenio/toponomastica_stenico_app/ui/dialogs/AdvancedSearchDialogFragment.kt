@@ -1,4 +1,4 @@
-package com.ferrarieugenio.toponomastica_stenico_app.ui.components
+package com.ferrarieugenio.toponomastica_stenico_app.ui.dialogs
 
 import android.app.AlertDialog
 import android.os.Bundle

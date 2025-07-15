@@ -1,33 +1,38 @@
 package com.ferrarieugenio.toponomastica_stenico_app.ui.main.map
 
 import android.annotation.SuppressLint
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.ferrarieugenio.toponomastica_stenico_app.R
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.FragmentMapBinding
+import com.ferrarieugenio.toponomastica_stenico_app.ui.dialogs.MapStyleSelectorDialog
 import com.ferrarieugenio.toponomastica_stenico_app.util.LocationHelper
 import com.ferrarieugenio.toponomastica_stenico_app.util.MapConfig
 import com.ferrarieugenio.toponomastica_stenico_app.util.MapMarkerManager
+import com.ferrarieugenio.toponomastica_stenico_app.util.MapStyle
 import com.ferrarieugenio.toponomastica_stenico_app.util.MapStyleManager
 import com.ferrarieugenio.toponomastica_stenico_app.util.SwipeGestureListener
 import com.ferrarieugenio.toponomastica_stenico_app.util.ViewAnimatorUtils
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
-import org.maplibre.android.maps.Style
 
 @AndroidEntryPoint
 class MapFragment : Fragment() {
@@ -38,11 +43,15 @@ class MapFragment : Fragment() {
     private var isMapFullyReady = false
 
     private lateinit var markerManager: MapMarkerManager
+    private val mapStyleManager: MapStyleManager by lazy {
+        MapStyleManager(requireContext())
+    }
+    private var currentMapStyle: MapStyle = MapStyle.OSM
 
     private lateinit var locationHelper: LocationHelper
     private var isLocationActive = false
 
-    private val viewModel: MapViewModel by viewModels()
+    private val viewModel: MapViewModel by activityViewModels()
 
     private var pendingZoom = false
 
@@ -78,6 +87,8 @@ class MapFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        currentMapStyle = viewModel.getSavedMapStyle()
 
         mapView = binding.mapView
         setupMap()
@@ -159,6 +170,10 @@ class MapFragment : Fragment() {
             isLocationActive = false
         }
 
+        binding.fabMapStyle.setOnClickListener {
+            showMapStyleDialog()
+        }
+
         if (isLocationActive) {
             binding.fabMyLocation.visibility = View.GONE
             binding.fabZoomToLocation.visibility = View.VISIBLE
@@ -168,6 +183,61 @@ class MapFragment : Fragment() {
             binding.fabZoomToLocation.visibility = View.GONE
             binding.fabDisableLocation.visibility = View.GONE
         }
+    }
+
+    private fun showMapStyleDialog() {
+        MapStyleSelectorDialog(
+            context = requireContext(),
+            currentStyle = currentMapStyle
+        ) { selected ->
+            changeMapStyle(selected)
+        }.show()
+    }
+
+    private fun changeMapStyle(nextStyle: MapStyle) {
+        when (val styleResult = mapStyleManager.setupStyle(nextStyle)) {
+            is MapStyleManager.StyleSetupResult.Success -> {
+                // If success, save style and reload fragment
+                viewModel.saveMapStyle(nextStyle)
+                currentMapStyle = nextStyle
+                reloadFragment()
+            }
+            is MapStyleManager.StyleSetupResult.Error -> {
+                val exception = styleResult.exception
+                if (exception.message?.contains("Satellite data not downloaded") == true) {
+                    showSatelliteDownloadDialog()
+                } else {
+                    Toast.makeText(requireContext(), "Errore: ${exception.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun reloadFragment() {
+        findNavController().navigate(
+            R.id.action_mapFragment_self,
+            null,
+            androidx.navigation.navOptions {
+                popUpTo(R.id.mapFragment) {
+                    inclusive = true
+                }
+            }
+        )
+    }
+
+    private fun showSatelliteDownloadDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Scarica dati satellitari")
+            .setMessage(
+                "Per utilizzare la modalità satellitare, è necessario scaricare circa 200 MB di dati aggiuntivi. " +
+                "Il download verrà effettuato una sola volta e ti permetterà di usare la mappa satellitare anche offline in futuro.\n\n" +
+                "Se vuoi, puoi avviare il download ora nella schermata dedicata."
+            )
+            .setPositiveButton("Vai al download") { _, _ ->
+                findNavController().navigate(R.id.action_mapFragment_to_satelliteDataFragment)
+            }
+            .setNegativeButton("Annulla", null)
+            .show()
     }
 
     private val requestLocationPermissionLauncher = registerForActivityResult(
@@ -181,16 +251,19 @@ class MapFragment : Fragment() {
     }
 
     private fun setupMap() {
-        val styleUri = when (val result = MapStyleManager(requireContext()).setupStyle()) {
-            is MapStyleManager.StyleSetupResult.Success -> result.styleFile
-            is MapStyleManager.StyleSetupResult.Error -> throw result.exception
+        val styleBuilder = when (val result = mapStyleManager.setupStyle(currentMapStyle)) {
+            is MapStyleManager.StyleSetupResult.Success -> result.styleBuilder
+            is MapStyleManager.StyleSetupResult.Error -> {
+                Toast.makeText(requireContext(), "Errore nel caricamento dello stile: ${result.exception.message}", Toast.LENGTH_LONG).show()
+                return
+            }
         }
 
         showLoading()
 
         mapView.getMapAsync { map ->
             mapLibreMap = map
-            map.setStyle(Style.Builder().fromUri(Uri.fromFile(styleUri).toString())) { style ->
+            map.setStyle(styleBuilder) { style ->
                 markerManager = MapMarkerManager(
                     context = requireContext(),
                     mapView = mapView,

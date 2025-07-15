@@ -16,6 +16,15 @@
         <action
             android:id="@+id/action_mapFragment_to_detailFragment"
             app:destination="@id/detailFragment" />
+
+        <action
+            android:id="@+id/action_mapFragment_to_satelliteDataFragment"
+            app:destination="@id/satelliteDataFragment" />
+
+        <action
+            android:id="@+id/action_mapFragment_self"
+            app:destination="@id/mapFragment"
+            app:launchSingleTop="true" />
     </fragment>
 
     <fragment
@@ -42,4 +51,8 @@
             app:destination="@id/detailFragment" />
     </fragment>
 
+    <fragment
+        android:id="@+id/satelliteDataFragment"
+        android:name="com.ferrarieugenio.toponomastica_stenico_app.ui.main.settings.SatelliteDataFragment"
+        android:label="Satellite Data" />
 </navigation>

@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.ferrarieugenio.toponomastica_stenico_app.ui.adapters.ToponymAdapter
 import com.ferrarieugenio.toponomastica_stenico_app.util.AdvancedFilters
 import dagger.hilt.android.AndroidEntryPoint
-import com.ferrarieugenio.toponomastica_stenico_app.ui.components.AdvancedSearchDialogFragment
+import com.ferrarieugenio.toponomastica_stenico_app.ui.dialogs.AdvancedSearchDialogFragment
 import com.ferrarieugenio.toponomastica_stenico_app.util.SortDirection
 import com.ferrarieugenio.toponomastica_stenico_app.util.SortField
 import com.ferrarieugenio.toponomastica_stenico_app.util.SortOption

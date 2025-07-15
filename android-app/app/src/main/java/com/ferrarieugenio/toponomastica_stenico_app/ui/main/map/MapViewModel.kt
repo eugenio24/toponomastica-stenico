@@ -8,9 +8,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
 import com.ferrarieugenio.toponomastica_stenico_app.data.repository.ToponymRepository
+import com.ferrarieugenio.toponomastica_stenico_app.util.MapStyle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.maplibre.android.camera.CameraPosition
-//import org.mapsforge.core.model.LatLong
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,6 +53,15 @@ class MapViewModel @Inject constructor(
         savedStateHandle["previousSelectedId"] = previousSelectedId
         savedStateHandle.remove<Int>("selectedId")
         _selectedToponym.value = null
+    }
+
+    fun saveMapStyle(style: MapStyle) {
+        savedStateHandle["map_style"] = style.name
+    }
+
+    fun getSavedMapStyle(): MapStyle {
+        val name = savedStateHandle.get<String>("map_style")
+        return if (name != null) MapStyle.valueOf(name) else MapStyle.OSM
     }
 
     fun saveCameraPosition(position: CameraPosition) {
