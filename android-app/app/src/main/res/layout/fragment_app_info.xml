@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/appInfoScrollView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.main.settings.info.AppInfoFragment">
+
+    <LinearLayout
+        android:id="@+id/appInfoContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="?android:attr/windowBackground">
+
+        <!-- Header row -->
+        <LinearLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="?attr/colorSurface"
+            android:elevation="4dp"
+            android:divider="?android:attr/listDivider"
+            android:showDividers="end">
+
+            <ImageView
+                android:id="@+id/backButton"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_arrow_back"
+                android:contentDescription="Torna indietro"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="0dp" />
+
+            <TextView
+                android:id="@+id/appInfoTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="Informazioni sull'app"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Content area -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/githubLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:autoLink="web"
+                android:text="Il codice sorgente è disponibile su GitHub: \nhttps://github.com/eugenio24/toponomastica-stenico"
+                android:textSize="16sp"
+                android:paddingBottom="16dp" />
+
+            <TextView
+                android:id="@+id/dataDisclaimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="I dati toponomastici originali appartengono alla Provincia Autonoma di Trento. L'app è a solo scopo ricreativo e non ufficiale."
+                android:textSize="16sp"
+                android:paddingBottom="16dp" />
+
+            <TextView
+                android:id="@+id/dataEnhancements"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="I dati sono stati arricchiti con altitudine (quando mancava), raggruppamenti e tag per migliorare l'esperienza d'uso."
+                android:textSize="16sp"
+                android:paddingBottom="16dp" />
+
+            <TextView
+                android:id="@+id/enhancementDisclaimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Poiché i miglioramenti ai dati sono stati effettuati automaticamente, potrebbero essere presenti errori, sia nei dati originali che in quelli elaborati."
+                android:textSize="16sp"
+                android:paddingBottom="16dp" />
+
+            <TextView
+                android:id="@+id/openSourceNote"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Il progetto è open-source. Per ulteriori dettagli, consulta la pagina GitHub."
+                android:textSize="16sp"
+                android:paddingBottom="16dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/githubChip"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Visita la pagina GitHub"
+                android:textSize="16sp"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingEnd="8dp"
+                android:paddingBottom="16dp"
+                app:chipIconVisible="true"
+                app:chipIcon="@drawable/ic_github"
+                app:iconStartPadding="4dp"
+                app:iconEndPadding="4dp"
+                app:chipStrokeWidth="1dp"
+                app:chipStrokeColor="?attr/colorPrimary"
+                android:layout_gravity="center_horizontal"
+                app:chipBackgroundColor="?attr/colorSurface"
+                app:iconTint="?attr/colorPrimary"
+                app:rippleColor="?attr/colorControlHighlight" />
+
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

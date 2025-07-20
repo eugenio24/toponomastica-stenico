@@ -37,6 +37,18 @@
     </fragment>
 
     <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.ferrarieugenio.toponomastica_stenico_app.ui.main.settings.SettingsFragment"
+        android:label="Settings">
+        <action
+            android:id="@+id/action_settingsFragment_to_satelliteDataFragment"
+            app:destination="@+id/satelliteDataFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_appInfoFragment"
+            app:destination="@+id/appInfoFragment" />
+    </fragment>
+
+    <fragment
         android:id="@+id/detailFragment"
         android:name="com.ferrarieugenio.toponomastica_stenico_app.ui.main.detail.DetailFragment"
         android:label="Detail">
@@ -53,6 +65,11 @@
 
     <fragment
         android:id="@+id/satelliteDataFragment"
-        android:name="com.ferrarieugenio.toponomastica_stenico_app.ui.main.settings.SatelliteDataFragment"
+        android:name="com.ferrarieugenio.toponomastica_stenico_app.ui.main.settings.satellitedata.SatelliteDataFragment"
         android:label="Satellite Data" />
+
+    <fragment
+        android:id="@+id/appInfoFragment"
+        android:name="com.ferrarieugenio.toponomastica_stenico_app.ui.main.settings.info.AppInfoFragment"
+        android:label="App Info" />
 </navigation>

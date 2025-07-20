@@ -2,6 +2,7 @@ package com.ferrarieugenio.toponomastica_stenico_app.util.map
 
 import android.content.Context
 import android.net.Uri
+import com.ferrarieugenio.toponomastica_stenico_app.util.download.SatelliteDataManager
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.RasterLayer
 import org.maplibre.android.style.sources.RasterSource

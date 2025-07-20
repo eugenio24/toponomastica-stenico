@@ -1,43 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="?android:attr/windowBackground">
 
-    <TextView
-        android:id="@+id/tvStatus"
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Status text here"
-        android:textSize="16sp"
-        android:paddingBottom="12dp"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:background="?attr/colorSurface"
+        android:elevation="4dp">
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
+        <ImageView
+            android:id="@+id/backButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="Torna indietro"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="0dp" />
+
+        <TextView
+            android:id="@+id/appInfoTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="Gestisci dati satellitari"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Content padding container -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:max="100"
-        android:progress="0"
-        android:indeterminate="false"
-        android:paddingBottom="12dp"/>
+        android:orientation="vertical"
+        android:padding="20dp">
 
-    <Button
-        android:id="@+id/btnStartDownload"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Scarica dati satellitari"/>
+        <!-- Status Text -->
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Status text here"
+            android:textSize="16sp"
+            android:textColor="?attr/colorOnBackground"
+            android:lineSpacingExtra="6dp"
+            android:paddingBottom="24dp"
+            android:maxLines="4"
+            android:ellipsize="end" />
 
-    <Button
-        android:id="@+id/btnDeleteData"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Elimina dati scaricati"
-        android:visibility="gone"
-        android:layout_marginTop="8dp"/>
+        <!-- Container for progress and texts -->
+        <LinearLayout
+            android:id="@+id/progressLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginBottom="24dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+
+            <!-- Row with progress bar and percent -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progressBar"
+                    style="@style/Widget.Material3.LinearProgressIndicator"
+                    android:layout_width="0dp"
+                    android:layout_height="8dp"
+                    android:layout_weight="1"
+                    app:trackStopIndicatorSize="0dp"
+                    android:max="100"
+                    app:trackThickness="8dp"
+                    android:indeterminate="false"
+                    android:progress="0" />
+
+                <TextView
+                    android:id="@+id/tvProgressPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="0%"
+                    android:textSize="14sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Estimated time below -->
+            <TextView
+                android:id="@+id/tvEstimatedTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="14sp"
+                android:textColor="?attr/colorOnSurface"
+                android:layout_marginTop="8dp"
+                android:visibility="gone"
+                android:gravity="end" />
+        </LinearLayout>
+
+
+        <!-- Buttons row -->
+        <LinearLayout
+            android:id="@+id/buttonsRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="3"
+            android:layout_marginBottom="16dp"
+            android:paddingHorizontal="4dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStartDownload"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Scarica"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelDownload"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Annulla"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeleteData"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Elimina"
+                android:visibility="gone" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

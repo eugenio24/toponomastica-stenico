@@ -3,7 +3,7 @@ package com.ferrarieugenio.toponomastica_stenico_app.di
 import android.content.Context
 import com.ferrarieugenio.toponomastica_stenico_app.data.datasource.ToponymAssetDataSource
 import com.ferrarieugenio.toponomastica_stenico_app.data.repository.ToponymRepository
-import com.ferrarieugenio.toponomastica_stenico_app.util.map.SatelliteDataManager
+import com.ferrarieugenio.toponomastica_stenico_app.util.download.SatelliteDataManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

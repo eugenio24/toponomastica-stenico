@@ -1,8 +1,9 @@
-package com.ferrarieugenio.toponomastica_stenico_app.util.map
+package com.ferrarieugenio.toponomastica_stenico_app.util.download
 
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -28,16 +29,20 @@ class SatelliteDataManager(private val context: Context) {
         return satelliteDir.exists() && satelliteDir.isDirectory && metadataFile.exists()
     }
 
-    suspend fun downloadAndExtractSatelliteData(onProgress: (percent: Int) -> Unit) {
+    suspend fun downloadAndExtractSatelliteData(progressChannel: SendChannel<Int>) {
         withContext(Dispatchers.IO) {
             val zipFile = File(context.cacheDir, ZIP_FILENAME)
             try {
-                downloadFile(REMOTE_ZIP_URL, zipFile, onProgress)
+                downloadFile(REMOTE_ZIP_URL, zipFile) { percent ->
+                    progressChannel.trySend(percent)
+                }
                 unzip(zipFile, context.filesDir)
                 zipFile.delete()
             } catch (e: Exception) {
                 Log.e(TAG, "Download/extract failed", e)
                 throw e
+            } finally {
+                progressChannel.close()
             }
         }
     }
@@ -81,5 +86,18 @@ class SatelliteDataManager(private val context: Context) {
                 entry = zip.nextEntry
             }
         }
+    }
+
+    fun deleteSatelliteData(): Boolean {
+        val metadataFile = File(satelliteDir.parentFile, METADATA_FILENAME)
+        val dataDeleted = if (satelliteDir.exists() && satelliteDir.isDirectory) {
+            satelliteDir.deleteRecursively()
+        } else true
+
+        val metadataDeleted = if (metadataFile.exists()) {
+            metadataFile.delete()
+        } else true
+
+        return dataDeleted && metadataDeleted
     }
 }
