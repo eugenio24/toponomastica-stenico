@@ -31,7 +31,11 @@ class ToponymAdapter(
         val descriptionTextView: TextView = itemView.findViewById(R.id.toponymDescription)
 
         fun bind(toponym: Toponym, query: String) {
-            nameTextView.text = toponym.nome
+            nameTextView.text = if (query.isBlank()) {
+                toponym.nome
+            } else {
+                highlightQueryInText(toponym.nome, query)
+            }
 
             descriptionTextView.visibility = View.VISIBLE
             descriptionTextView.text = if (query.isBlank()) {
@@ -43,6 +47,26 @@ class ToponymAdapter(
             itemView.setOnClickListener {
                 onClick(toponym)
             }
+        }
+
+        private fun highlightQueryInText(text: String, query: String): CharSequence {
+            val spannable = SpannableString(text)
+            val textLower = text.lowercase()
+            val queryLower = query.lowercase()
+
+            var startIndex = textLower.indexOf(queryLower)
+            while (startIndex >= 0) {
+                val endIndex = startIndex + query.length
+                spannable.setSpan(
+                    StyleSpan(Typeface.BOLD),
+                    startIndex,
+                    endIndex,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                startIndex = textLower.indexOf(queryLower, endIndex)
+            }
+
+            return spannable
         }
 
         private fun highlightQueryPreview(text: String, query: String, snippetLength: Int = 60): CharSequence {

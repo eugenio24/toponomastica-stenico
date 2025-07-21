@@ -1,8 +1,15 @@
 package com.ferrarieugenio.toponomastica_stenico_app.ui.main.settings.satellitedata
 
 import android.content.Context
-import androidx.lifecycle.*
-import androidx.work.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.ferrarieugenio.toponomastica_stenico_app.util.download.SatelliteDataManager
 import com.ferrarieugenio.toponomastica_stenico_app.util.download.SatelliteDownloadWorker
 import dagger.hilt.android.lifecycle.HiltViewModel

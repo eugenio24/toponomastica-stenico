@@ -23,10 +23,12 @@ import com.ferrarieugenio.toponomastica_stenico_app.util.map.MapStyle
 import com.ferrarieugenio.toponomastica_stenico_app.util.map.MapStyleManager
 import com.ferrarieugenio.toponomastica_stenico_app.util.ui.SwipeGestureListener
 import com.ferrarieugenio.toponomastica_stenico_app.util.ui.ViewAnimatorUtils
+import com.ferrarieugenio.toponomastica_stenico_app.util.ui.createDetailShimmerPlaceholder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
@@ -356,7 +358,7 @@ class MapFragment : Fragment() {
                     pendingZoom = false
                 }
             } else {
-                binding.previewContainer.visibility = View.GONE
+                ViewAnimatorUtils.hideBottomPanel(binding.previewContainer)
             }
         }
     }
@@ -371,11 +373,17 @@ class MapFragment : Fragment() {
             .target(LatLng(lat, lon))
             .zoom(16.0)
             .build()
-        mapLibreMap.cameraPosition = cameraPosition
+        mapLibreMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
     }
 
     private fun navigateToDetail(toponym: Toponym) {
-        ViewAnimatorUtils.hideBottomPanel(binding.previewContainer) {
+        ViewAnimatorUtils.expandWithShimmerAndNavigate(
+            preview = binding.previewContainer,
+            rootView = binding.mapFragmentRoot,
+            shimmerContainer = binding.previewShimmerContainer,
+            contentContainer = binding.previewContentContainer,
+            shimmerView = createDetailShimmerPlaceholder(binding.previewContainer.context)
+        ) {
             val action = MapFragmentDirections.actionMapFragmentToDetailFragment(toponym)
             findNavController().navigate(action)
         }
