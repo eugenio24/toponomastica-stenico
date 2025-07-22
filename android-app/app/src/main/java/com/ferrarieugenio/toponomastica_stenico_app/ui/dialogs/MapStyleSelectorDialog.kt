@@ -17,6 +17,8 @@ class MapStyleSelectorDialog(
 
         var currentSelection = currentStyle
 
+        binding.contoursToggle.isChecked = currentStyle.showContours
+
         fun updateSelection(selected: MapStyle) {
             val typedValue = TypedValue()
             val theme = context.theme
@@ -31,13 +33,13 @@ class MapStyleSelectorDialog(
             val unselectedTextColor = typedValue.data
 
             val selectedViews = when (selected) {
-                MapStyle.OSM -> binding.styleOptionOsm to binding.textOsm
-                MapStyle.SATELLITE -> binding.styleOptionSatellite to binding.textSatellite
+                is MapStyle.OSM -> binding.styleOptionOsm to binding.textOsm
+                is MapStyle.SATELLITE -> binding.styleOptionSatellite to binding.textSatellite
             }
 
             val unselectedViews = when (selected) {
-                MapStyle.OSM -> binding.styleOptionSatellite to binding.textSatellite
-                MapStyle.SATELLITE -> binding.styleOptionOsm to binding.textOsm
+                is MapStyle.OSM -> binding.styleOptionSatellite to binding.textSatellite
+                is MapStyle.SATELLITE -> binding.styleOptionOsm to binding.textOsm
             }
 
             selectedViews.first.strokeColor = selectedColor
@@ -47,12 +49,20 @@ class MapStyleSelectorDialog(
             unselectedViews.second.setTextColor(unselectedTextColor)
 
             currentSelection = selected
+            binding.contoursToggle.isChecked = currentSelection.showContours
         }
 
         updateSelection(currentSelection)
 
-        binding.styleOptionOsm.setOnClickListener { updateSelection(MapStyle.OSM) }
-        binding.styleOptionSatellite.setOnClickListener { updateSelection(MapStyle.SATELLITE) }
+        binding.styleOptionOsm.setOnClickListener { updateSelection(MapStyle.OSM(currentSelection.showContours)) }
+        binding.styleOptionSatellite.setOnClickListener { updateSelection(MapStyle.SATELLITE(currentSelection.showContours)) }
+
+        binding.contoursToggle.setOnCheckedChangeListener { _, isChecked ->
+            currentSelection = when (currentSelection) {
+                is MapStyle.OSM -> MapStyle.OSM(isChecked)
+                is MapStyle.SATELLITE -> MapStyle.SATELLITE(isChecked)
+            }
+        }
 
         MaterialAlertDialogBuilder(context)
             .setView(binding.root)

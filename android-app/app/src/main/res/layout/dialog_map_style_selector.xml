@@ -108,4 +108,23 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/optionsLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Opzioni"
+        android:textAppearance="?attr/textAppearanceSubtitle1"
+        android:paddingTop="24dp"
+        android:paddingBottom="8dp" />
+
+    <!-- Contours Toggle -->
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/contoursToggle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mostra curve di livello"
+        android:checked="true"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp" />
 </LinearLayout>

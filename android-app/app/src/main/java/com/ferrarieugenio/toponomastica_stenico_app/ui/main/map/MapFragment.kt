@@ -32,6 +32,8 @@ import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
+import org.maplibre.android.style.layers.Property
+import org.maplibre.android.style.layers.PropertyFactory
 
 @AndroidEntryPoint
 class MapFragment : Fragment() {
@@ -45,7 +47,7 @@ class MapFragment : Fragment() {
     private val mapStyleManager: MapStyleManager by lazy {
         MapStyleManager(requireContext())
     }
-    private var currentMapStyle: MapStyle = MapStyle.OSM
+    private lateinit var currentMapStyle: MapStyle
 
     private lateinit var locationHelper: LocationHelper
     private var isLocationActive = false
@@ -189,7 +191,15 @@ class MapFragment : Fragment() {
             context = requireContext(),
             currentStyle = currentMapStyle
         ) { selected ->
-            changeMapStyle(selected)
+            if (selected.name != currentMapStyle.name) {
+                changeMapStyle(selected)
+            } else if (selected.showContours != currentMapStyle.showContours) {
+                currentMapStyle = selected
+                mapLibreMap.style?.let {
+                    applyContourVisibility(it, currentMapStyle.showContours)
+                }
+                viewModel.saveMapStyle(selected)
+            }
         }.show()
     }
 
@@ -263,6 +273,8 @@ class MapFragment : Fragment() {
         mapView.getMapAsync { map ->
             mapLibreMap = map
             map.setStyle(styleBuilder) { style ->
+                applyContourVisibility(style, currentMapStyle.showContours)
+
                 markerManager = MapMarkerManager(
                     context = requireContext(),
                     mapView = mapView,
@@ -283,6 +295,20 @@ class MapFragment : Fragment() {
             mapLibreMap.setMinZoomPreference(MapConfig.MIN_ZOOM_BOUND)
             mapLibreMap.setMaxZoomPreference(MapConfig.MAX_ZOOM_BOUND)
         }
+    }
+
+    private fun applyContourVisibility(style: org.maplibre.android.maps.Style, showContours: Boolean) {
+        val visibility = if (showContours)
+            Property.VISIBLE
+        else
+            Property.NONE
+
+        style.getLayer("contour")?.setProperties(
+            PropertyFactory.visibility(visibility)
+        )
+        style.getLayer("contour_label")?.setProperties(
+            PropertyFactory.visibility(visibility)
+        )
     }
 
     private fun waitForNextFullRender(onComplete: () -> Unit) {

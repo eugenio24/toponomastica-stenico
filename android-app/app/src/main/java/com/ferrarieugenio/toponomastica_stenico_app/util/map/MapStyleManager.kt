@@ -4,9 +4,6 @@ import android.content.Context
 import android.net.Uri
 import com.ferrarieugenio.toponomastica_stenico_app.util.download.SatelliteDataManager
 import org.maplibre.android.maps.Style
-import org.maplibre.android.style.layers.RasterLayer
-import org.maplibre.android.style.sources.RasterSource
-import org.maplibre.android.style.sources.TileSet
 import java.io.File
 
 class MapStyleManager(private val context: Context) {
@@ -19,77 +16,88 @@ class MapStyleManager(private val context: Context) {
     fun setupStyle(style: MapStyle): StyleSetupResult {
         return try {
             when (style) {
-                MapStyle.OSM -> setupOsmStyle()
-                MapStyle.SATELLITE -> setupSatelliteStyle()
+                is MapStyle.OSM -> setupOsmStyle(style)
+                is MapStyle.SATELLITE -> setupSatelliteStyle(style)
             }
         } catch (e: Exception) {
             StyleSetupResult.Error(e)
         }
     }
 
-    fun setupOsmStyle(): StyleSetupResult {
-        val styleFile = copyAssetToInternal(STYLE_FILENAME)
+    private fun setupOsmStyle(style: MapStyle.OSM): StyleSetupResult {
+        val styleFile = copyAssetToInternal(OSM_STYLE_FILENAME)
         val mbtilesFile = copyAssetToInternal(MBTILES_FILENAME)
         val mbtilesFileContours = copyAssetToInternal(CONTOUR_MBTILES_FILENAME)
 
-        updateStyleFileUri(styleFile, mbtilesFile, mbtilesFileContours)
+        var styleContent = styleFile.readText()
 
-        val styleBuilder = Style.Builder().fromUri(Uri.fromFile(styleFile).toString())
-
-        return StyleSetupResult.Success(styleBuilder = styleBuilder)
-    }
-
-    private fun setupSatelliteStyle(): StyleSetupResult {
-        val satelliteManager = SatelliteDataManager(context)
-
-        if (!satelliteManager.isSatelliteDataAvailable()) {
-            throw IllegalStateException("Satellite data not downloaded yet")
-        }
-
-        val satelliteDir = File(context.filesDir, SatelliteDataManager.SATELLITE_FOLDER)
-
-        val rasterSource = RasterSource(
-            "offline-raster-source",
-            TileSet("tileset", "file://${satelliteDir.absolutePath}/{z}/{x}/{y}.jpg"),
-            256
-        )
-        val rasterLayer = RasterLayer("offline-raster-layer", "offline-raster-source")
-
-        val styleBuilder = Style.Builder()
-            .fromUri("asset://satellite-style.json")
-            .withSource(rasterSource)
-            .withLayer(rasterLayer)
-
-        return StyleSetupResult.Success(styleBuilder = styleBuilder)
-    }
-
-    private fun copyAssetToInternal(assetFileName: String): File {
-        context.assets.open(assetFileName).use { input ->
-            val outputFile = File(context.filesDir, assetFileName)
-            outputFile.outputStream().use { output ->
-                input.copyTo(output)
-            }
-            return outputFile
-        }
-    }
-
-    private fun updateStyleFileUri(styleFile: File, mbtilesFile: File, mbtilesFileContours: File) {
-        val styleContent = styleFile.readText()
-        val updatedContent = styleContent.replace(
+        styleContent = styleContent.replace(
             FILE_URI_PLACEHOLDER,
             "mbtiles:///${mbtilesFile.absolutePath}"
         ).replace(
             CONTOUR_FILE_URI_PLACEHOLDER,
-            "mbtiles:///${mbtilesFileContours.absolutePath}"
+            mbtilesFileContours?.let { "mbtiles:///${it.absolutePath}" } ?: ""
         )
-        styleFile.writeText(updatedContent)
+
+        styleFile.writeText(styleContent)
+
+        val builder = Style.Builder()
+            .fromUri(Uri.fromFile(styleFile).toString())
+
+        return StyleSetupResult.Success(styleFile = styleFile, styleBuilder = builder)
+    }
+
+    private fun setupSatelliteStyle(style: MapStyle.SATELLITE): StyleSetupResult {
+        val satelliteManager = SatelliteDataManager(context)
+        if (!satelliteManager.isSatelliteDataAvailable()) {
+            throw IllegalStateException("Satellite data not downloaded yet")
+        }
+
+        val styleFile = copyAssetToInternal(SATELLITE_STYLE_FILENAME)
+
+        val mbtilesFileContours = copyAssetToInternal(CONTOUR_MBTILES_FILENAME)
+        val satelliteDir = File(context.filesDir, SatelliteDataManager.SATELLITE_FOLDER)
+
+        var styleContent = styleFile.readText()
+
+        styleContent = styleContent.replace(
+            SATELLITE_FOLDER_URI_PLACEHOLDER,
+            "file://${satelliteDir.absolutePath}/{z}/{x}/{y}.jpg"
+        ).replace(
+            CONTOUR_FILE_URI_PLACEHOLDER,
+            mbtilesFileContours?.let { "mbtiles:///${it.absolutePath}" } ?: ""
+        )
+
+        styleFile.writeText(styleContent)
+
+        val builder = Style.Builder()
+            .fromUri(Uri.fromFile(styleFile).toString())
+
+        return StyleSetupResult.Success(styleFile = styleFile, styleBuilder = builder)
+    }
+
+    private fun copyAssetToInternal(assetFileName: String): File {
+        val outputFile = File(context.filesDir, assetFileName)
+        if (outputFile.exists()) return outputFile
+
+        context.assets.open(assetFileName).use { input ->
+            outputFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        return outputFile
     }
 
     companion object {
-        private const val STYLE_FILENAME = "osm-style.json"
+        private const val OSM_STYLE_FILENAME = "osm-style.json"
+        private const val SATELLITE_STYLE_FILENAME = "satellite-style.json"
+
         private const val MBTILES_FILENAME = "stenico-osm.mbtiles"
         private const val FILE_URI_PLACEHOLDER = "___FILE_URI___"
+
         private const val CONTOUR_MBTILES_FILENAME = "stenico-contours.mbtiles"
         private const val CONTOUR_FILE_URI_PLACEHOLDER = "___CONTOURS_FILE_URI___"
+
+        private const val SATELLITE_FOLDER_URI_PLACEHOLDER = "___SATELLITE_FOLDER_URI___"
     }
 }
