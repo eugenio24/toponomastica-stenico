@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.0"
+agp = "8.11.1"
 androidPluginAnnotationV9 = "3.0.2"
 androidSdk = "11.10.3"
 fastscroll = "2.1.0"
