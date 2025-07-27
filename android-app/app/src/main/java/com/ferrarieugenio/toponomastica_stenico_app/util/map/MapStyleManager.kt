@@ -16,15 +16,15 @@ class MapStyleManager(private val context: Context) {
     fun setupStyle(style: MapStyle): StyleSetupResult {
         return try {
             when (style) {
-                is MapStyle.OSM -> setupOsmStyle(style)
-                is MapStyle.SATELLITE -> setupSatelliteStyle(style)
+                is MapStyle.OSM -> setupOsmStyle()
+                is MapStyle.SATELLITE -> setupSatelliteStyle()
             }
         } catch (e: Exception) {
             StyleSetupResult.Error(e)
         }
     }
 
-    private fun setupOsmStyle(style: MapStyle.OSM): StyleSetupResult {
+    private fun setupOsmStyle(): StyleSetupResult {
         val styleFile = copyAssetToInternal(OSM_STYLE_FILENAME)
         val mbtilesFile = copyAssetToInternal(MBTILES_FILENAME)
         val mbtilesFileContours = copyAssetToInternal(CONTOUR_MBTILES_FILENAME)
@@ -36,7 +36,7 @@ class MapStyleManager(private val context: Context) {
             "mbtiles:///${mbtilesFile.absolutePath}"
         ).replace(
             CONTOUR_FILE_URI_PLACEHOLDER,
-            mbtilesFileContours?.let { "mbtiles:///${it.absolutePath}" } ?: ""
+            "mbtiles:///${mbtilesFileContours.absolutePath}"
         )
 
         styleFile.writeText(styleContent)
@@ -47,9 +47,8 @@ class MapStyleManager(private val context: Context) {
         return StyleSetupResult.Success(styleFile = styleFile, styleBuilder = builder)
     }
 
-    private fun setupSatelliteStyle(style: MapStyle.SATELLITE): StyleSetupResult {
-        val satelliteManager = SatelliteDataManager(context)
-        if (!satelliteManager.isSatelliteDataAvailable()) {
+    private fun setupSatelliteStyle(): StyleSetupResult {
+        if (!SatelliteDataChecker.isSatelliteDataAvailable(context)) {
             throw IllegalStateException("Satellite data not downloaded yet")
         }
 
@@ -65,7 +64,7 @@ class MapStyleManager(private val context: Context) {
             "file://${satelliteDir.absolutePath}/{z}/{x}/{y}.jpg"
         ).replace(
             CONTOUR_FILE_URI_PLACEHOLDER,
-            mbtilesFileContours?.let { "mbtiles:///${it.absolutePath}" } ?: ""
+            "mbtiles:///${mbtilesFileContours.absolutePath}"
         )
 
         styleFile.writeText(styleContent)

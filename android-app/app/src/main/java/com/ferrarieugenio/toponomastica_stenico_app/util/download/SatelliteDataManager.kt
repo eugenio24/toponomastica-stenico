@@ -5,6 +5,10 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
+import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -47,24 +51,80 @@ class SatelliteDataManager(private val context: Context) {
         }
     }
 
-    private fun downloadFile(urlString: String, destination: File, onProgress: (percent: Int) -> Unit) {
-        val url = URL(urlString)
-        val connection = url.openConnection() as HttpURLConnection
-        connection.connect()
-        val fileLength = connection.contentLength
+    private suspend fun downloadFile(
+        urlString: String,
+        destination: File,
+        maxRetries: Int = 3,
+        onProgress: (percent: Int) -> Unit
+    ) = withContext(Dispatchers.IO) {
+        var attempt = 0
+        var lastProgress = -1
 
-        connection.inputStream.use { input ->
-            FileOutputStream(destination).use { output ->
-                val data = ByteArray(4096)
-                var total: Long = 0
-                var count = input.read(data)
-                while (count != -1) {
-                    total += count
-                    output.write(data, 0, count)
-                    val progress = if (fileLength > 0) (total * 100 / fileLength).toInt() else -1
-                    if (progress != -1) onProgress(progress)
-                    count = input.read(data)
+        while (attempt < maxRetries && isActive) {
+            try {
+                // Check if partial file exists and its size for resume
+                val downloadedBytes = if (destination.exists()) destination.length() else 0L
+
+                val url = URL(urlString)
+                val connection = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 15_000 // 15 seconds
+                    readTimeout = 15_000    // 15 seconds
+                    // Support resume
+                    if (downloadedBytes > 0) {
+                        setRequestProperty("Range", "bytes=$downloadedBytes-")
+                    }
+                    connect()
                 }
+
+                val responseCode = connection.responseCode
+                if (responseCode !in 200..299) {
+                    throw Exception("HTTP error code: $responseCode")
+                }
+
+                val contentLength = connection.getHeaderFieldLong("Content-Length", -1)
+                val totalLength = if (downloadedBytes > 0 && responseCode == 206) downloadedBytes + contentLength else contentLength
+
+                val inputStream = BufferedInputStream(connection.inputStream)
+                val outputStream = if (downloadedBytes > 0) {
+                    FileOutputStream(destination, true) // append mode
+                } else {
+                    FileOutputStream(destination)
+                }
+
+                inputStream.use { input ->
+                    outputStream.use { output ->
+                        val buffer = ByteArray(8192)
+                        var bytesRead: Int
+                        var totalRead = downloadedBytes
+                        while (input.read(buffer).also { bytesRead = it } != -1) {
+                            // Check for coroutine cancellation
+                            if (!isActive) {
+                                throw Exception("Download cancelled")
+                            }
+                            output.write(buffer, 0, bytesRead)
+                            totalRead += bytesRead
+                            if (totalLength > 0) {
+                                val progress = (totalRead * 100 / totalLength).toInt()
+                                if (progress != lastProgress) {
+                                    lastProgress = progress
+                                    onProgress(progress)
+                                }
+                            }
+                        }
+                        output.flush()
+                    }
+                }
+
+                // If reached here, success
+                return@withContext
+
+            } catch (e: Exception) {
+                attempt++
+                if (attempt >= maxRetries) {
+                    throw e
+                }
+                // backoff delay before retrying
+                delay(2000L * attempt)
             }
         }
     }

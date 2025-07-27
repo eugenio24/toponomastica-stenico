@@ -23,6 +23,13 @@ class SatelliteDownloadWorker(
     private val CHANNEL_ID = "satellite_download"
 
     override suspend fun doWork(): Result = coroutineScope {
+        val maxRetries = 3
+        val attempt = runAttemptCount
+
+        if (attempt > maxRetries) {
+            return@coroutineScope Result.failure(workDataOf("error" to "Max retry attempts reached"))
+        }
+
         val manager = SatelliteDataManager(applicationContext)
         val progressChannel = Channel<Int>(Channel.UNLIMITED)
 
@@ -48,7 +55,7 @@ class SatelliteDownloadWorker(
             Result.success()
         } catch (e: Exception) {
             progressJob.cancel()
-            Result.failure(workDataOf("error" to (e.message ?: "Unknown error")))
+            Result.retry()
         }
     }
 
