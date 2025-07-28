@@ -71,16 +71,19 @@ class MapViewModel @Inject constructor(
         savedStateHandle["camera_lat"] = position.target?.latitude
         savedStateHandle["camera_lng"] = position.target?.longitude
         savedStateHandle["camera_zoom"] = position.zoom
+        savedStateHandle["camera_bearing"] = position.bearing
     }
 
     fun getSavedCameraPosition(): CameraPosition? {
         val lat = savedStateHandle.get<Double>("camera_lat")
         val lng = savedStateHandle.get<Double>("camera_lng")
         val zoom = savedStateHandle.get<Double>("camera_zoom")
+        val bearing = savedStateHandle.get<Double>("camera_bearing") ?: 0.0
         return if (lat != null && lng != null && zoom != null) {
             CameraPosition.Builder()
                 .target(org.maplibre.android.geometry.LatLng(lat, lng))
                 .zoom(zoom)
+                .bearing(bearing)
                 .build()
         } else null
     }
