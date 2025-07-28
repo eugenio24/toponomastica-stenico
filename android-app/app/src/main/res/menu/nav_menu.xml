@@ -12,4 +12,8 @@
         android:id="@+id/searchFragment"
         android:icon="@drawable/ic_search"
         android:title="Ricerca" />
+    <item
+        android:id="@+id/bookmarksFragment"
+        android:icon="@drawable/ic_bookmarks"
+        android:title="Raccolta" />
 </menu>

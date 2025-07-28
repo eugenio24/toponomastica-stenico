@@ -4,11 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.ferrarieugenio.toponomastica_stenico_app.R
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.FragmentDetailBinding
 import com.ferrarieugenio.toponomastica_stenico_app.ui.adapters.NeighborAdapter
 import dagger.hilt.android.AndroidEntryPoint
@@ -110,6 +112,26 @@ class DetailFragment : Fragment() {
                 binding.neighborsLabel.visibility = View.GONE
                 binding.neighborsRecyclerView.visibility = View.GONE
             }
+        }
+
+        viewModel.isBookmarked.observe(viewLifecycleOwner) { bookmarked ->
+            if (bookmarked) {
+                binding.bookmarkToggleButton.text = "Rimuovi dalla raccolta"
+                binding.bookmarkToggleButton.icon = ContextCompat.getDrawable(
+                    requireContext(),
+                    R.drawable.ic_bookmark_remove
+                )
+            } else {
+                binding.bookmarkToggleButton.text = "Aggiungi alla raccolta"
+                binding.bookmarkToggleButton.icon = ContextCompat.getDrawable(
+                    requireContext(),
+                    R.drawable.ic_bookmark_add
+                )
+            }
+        }
+
+        binding.bookmarkToggleButton.setOnClickListener {
+            viewModel.toggleBookmark()
         }
     }
 

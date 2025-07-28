@@ -33,8 +33,6 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Rest of your content -->
-
         <LinearLayout
             android:id="@+id/settingsContentContainer"
             android:layout_width="match_parent"

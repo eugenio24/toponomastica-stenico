@@ -72,4 +72,13 @@
         android:id="@+id/appInfoFragment"
         android:name="com.ferrarieugenio.toponomastica_stenico_app.ui.main.settings.info.AppInfoFragment"
         android:label="App Info" />
+
+    <fragment
+        android:id="@+id/bookmarksFragment"
+        android:name="com.ferrarieugenio.toponomastica_stenico_app.ui.main.bookmarks.BookmarksFragment"
+        android:label="Bookmarks">
+        <action
+            android:id="@+id/action_bookmarksFragment_to_detailFragment"
+            app:destination="@id/detailFragment" />
+    </fragment>
 </navigation>
