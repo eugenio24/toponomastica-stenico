@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BookmarksViewModel @Inject constructor(
-    private val toponymRepository: ToponymRepository,
+    val toponymRepository: ToponymRepository,
     private val bookmarkRepository: BookmarkRepository
 ) : ViewModel() {
 
@@ -59,5 +59,9 @@ class BookmarksViewModel @Inject constructor(
 
     fun toggleBookmark(id: Int) {
         bookmarkRepository.toggle(id)
+    }
+
+    fun hasBookmarkedToponyms(): Boolean {
+        return bookmarkedToponyms.value?.isNotEmpty() == true
     }
 }

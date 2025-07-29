@@ -6,6 +6,8 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -15,6 +17,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.FragmentSearchBinding
 import com.ferrarieugenio.toponomastica_stenico_app.ui.adapters.ToponymAdapter
 import com.ferrarieugenio.toponomastica_stenico_app.ui.dialogs.AdvancedSearchDialogFragment
+import com.ferrarieugenio.toponomastica_stenico_app.ui.dialogs.ExportDialogFragment
+import com.ferrarieugenio.toponomastica_stenico_app.util.exporter.FileExportUtils
 import com.ferrarieugenio.toponomastica_stenico_app.util.filters.AdvancedFilters
 import com.ferrarieugenio.toponomastica_stenico_app.util.filters.SortDirection
 import com.ferrarieugenio.toponomastica_stenico_app.util.filters.SortField
@@ -35,6 +39,8 @@ class SearchFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var searchJob: Job? = null
+
+    private var pendingExportData: ByteArray? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -81,6 +87,14 @@ class SearchFragment : Fragment() {
 
         binding.sortButton.setOnClickListener {
             showSortDialog()
+        }
+
+        binding.exportButton.setOnClickListener {
+            if (viewModel.filteredToponyms.value?.isNotEmpty() == true) {
+                showExportDialog()
+            } else {
+                Toast.makeText(requireContext(), "Nessun toponimo da esportare", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.searchEditText.addTextChangedListener(object : TextWatcher {
@@ -158,6 +172,47 @@ class SearchFragment : Fragment() {
         val count = filters.countActiveFilters()
         binding.filtersButton.setBadgeNumber(count)
     }
+
+    private fun showExportDialog() {
+        val toponyms = viewModel.filteredToponyms.value ?: emptyList()
+        val repository = viewModel.repository
+
+        val dialog = ExportDialogFragment(
+            toponyms = toponyms,
+            toponymRepository = repository,
+            onExported = { exportedData, format, fileName ->
+                pendingExportData = exportedData
+
+                val safeName = FileExportUtils.getSuggestedFileName(fileName, format)
+                createFileLauncher.launch(safeName)
+            }
+        )
+        dialog.show(parentFragmentManager, "export_dialog")
+    }
+
+    private val createFileLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
+            if (uri != null && pendingExportData != null) {
+                val success = FileExportUtils.saveTextToUri(
+                    context = requireContext(),
+                    uri = uri,
+                    content = pendingExportData!!
+                )
+
+                Toast.makeText(
+                    requireContext(),
+                    if (success)
+                        "File salvato con successo"
+                    else
+                        "Errore nel salvataggio del file",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Toast.makeText(requireContext(), "Salvataggio annullato", Toast.LENGTH_SHORT).show()
+            }
+
+            pendingExportData = null
+        }
 
     override fun onDestroyView() {
         super.onDestroyView()

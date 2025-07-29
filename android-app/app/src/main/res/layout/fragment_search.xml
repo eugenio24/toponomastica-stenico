@@ -66,6 +66,19 @@
             android:layout_height="wrap_content"
             android:text="Ordina"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+        <!-- Spacer -->
+        <Space
+            android:layout_width="12dp"
+            android:layout_height="wrap_content" />
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/exportButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Esporta"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
     </LinearLayout>
 
     <!-- Item count -->

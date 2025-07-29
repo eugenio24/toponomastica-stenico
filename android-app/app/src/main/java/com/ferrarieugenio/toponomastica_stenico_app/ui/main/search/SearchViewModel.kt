@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val repository: ToponymRepository
+    val repository: ToponymRepository
 ) : ViewModel() {
 
     lateinit var availableTags: List<String>
