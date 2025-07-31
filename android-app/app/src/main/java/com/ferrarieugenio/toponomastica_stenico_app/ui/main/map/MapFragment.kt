@@ -191,14 +191,25 @@ class MapFragment : Fragment() {
             context = requireContext(),
             currentStyle = currentMapStyle
         ) { selected ->
-            if (selected.name != currentMapStyle.name) {
+            val previous = currentMapStyle
+            val baseStyleChanged = selected.name != previous.name
+            val contoursChanged = selected.showContours != previous.showContours
+            val municipalitiesChanged = selected.showMunicipalities != previous.showMunicipalities
+
+            if (baseStyleChanged) {
                 changeMapStyle(selected)
-            } else if (selected.showContours != currentMapStyle.showContours) {
+            } else {
                 currentMapStyle = selected
-                mapLibreMap.style?.let {
-                    applyContourVisibility(it, currentMapStyle.showContours)
-                }
                 viewModel.saveMapStyle(selected)
+
+                mapLibreMap.style?.let { style ->
+                    if (contoursChanged) {
+                        applyContourVisibility(style, selected.showContours)
+                    }
+                    if (municipalitiesChanged) {
+                        applyMunicipalitiesVisibility(style, selected.showMunicipalities)
+                    }
+                }
             }
         }.show()
     }
@@ -274,6 +285,7 @@ class MapFragment : Fragment() {
             mapLibreMap = map
             map.setStyle(styleBuilder) { style ->
                 applyContourVisibility(style, currentMapStyle.showContours)
+                applyMunicipalitiesVisibility(style, currentMapStyle.showMunicipalities)
 
                 markerManager = MapMarkerManager(
                     context = requireContext(),
@@ -307,6 +319,20 @@ class MapFragment : Fragment() {
             PropertyFactory.visibility(visibility)
         )
         style.getLayer("contour_label")?.setProperties(
+            PropertyFactory.visibility(visibility)
+        )
+    }
+
+    private fun applyMunicipalitiesVisibility(style: org.maplibre.android.maps.Style, showMunicipalities: Boolean) {
+        val visibility = if (showMunicipalities)
+            Property.VISIBLE
+        else
+            Property.NONE
+
+        style.getLayer("municipality-boundary")?.setProperties(
+            PropertyFactory.visibility(visibility)
+        )
+        style.getLayer("municipality-label")?.setProperties(
             PropertyFactory.visibility(visibility)
         )
     }
@@ -397,7 +423,7 @@ class MapFragment : Fragment() {
     private fun zoomToToponym(lat: Double, lon: Double){
         val cameraPosition = CameraPosition.Builder()
             .target(LatLng(lat, lon))
-            .zoom(16.0)
+            .zoom(MapConfig.DETAIL_ZOOM)
             .build()
         mapLibreMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
     }

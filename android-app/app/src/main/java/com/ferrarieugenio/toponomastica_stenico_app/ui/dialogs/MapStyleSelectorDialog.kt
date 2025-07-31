@@ -15,61 +15,86 @@ class MapStyleSelectorDialog(
     fun show() {
         val binding = DialogMapStyleSelectorBinding.inflate(LayoutInflater.from(context))
 
-        var currentSelection = currentStyle
-
-        binding.contoursToggle.isChecked = currentStyle.showContours
-
-        fun updateSelection(selected: MapStyle) {
+        fun resolveAttrColor(attr: Int): Int {
             val typedValue = TypedValue()
-            val theme = context.theme
-
-            theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)
-            val selectedColor = typedValue.data
-
-            theme.resolveAttribute(com.google.android.material.R.attr.colorOutline, typedValue, true)
-            val unselectedStrokeColor = typedValue.data
-
-            theme.resolveAttribute(com.google.android.material.R.attr.colorOnSurfaceVariant, typedValue, true)
-            val unselectedTextColor = typedValue.data
-
-            val selectedViews = when (selected) {
-                is MapStyle.OSM -> binding.styleOptionOsm to binding.textOsm
-                is MapStyle.SATELLITE -> binding.styleOptionSatellite to binding.textSatellite
-            }
-
-            val unselectedViews = when (selected) {
-                is MapStyle.OSM -> binding.styleOptionSatellite to binding.textSatellite
-                is MapStyle.SATELLITE -> binding.styleOptionOsm to binding.textOsm
-            }
-
-            selectedViews.first.strokeColor = selectedColor
-            selectedViews.second.setTextColor(selectedColor)
-
-            unselectedViews.first.strokeColor = unselectedStrokeColor
-            unselectedViews.second.setTextColor(unselectedTextColor)
-
-            currentSelection = selected
-            binding.contoursToggle.isChecked = currentSelection.showContours
+            context.theme.resolveAttribute(attr, typedValue, true)
+            return typedValue.data
         }
 
-        updateSelection(currentSelection)
+        var styleType: MapStyle = currentStyle
+        var showContours = currentStyle.showContours
+        var showMunicipalities = currentStyle.showMunicipalities
 
-        binding.styleOptionOsm.setOnClickListener { updateSelection(MapStyle.OSM(currentSelection.showContours)) }
-        binding.styleOptionSatellite.setOnClickListener { updateSelection(MapStyle.SATELLITE(currentSelection.showContours)) }
+        val selectedColor = resolveAttrColor(com.google.android.material.R.attr.colorPrimary)
+        val unselectedStrokeColor = resolveAttrColor(com.google.android.material.R.attr.colorOutline)
+        val unselectedTextColor = resolveAttrColor(com.google.android.material.R.attr.colorOnSurfaceVariant)
+
+        fun updateUI() {
+            val isOsm = styleType is MapStyle.OSM
+
+            val (selectedCard, selectedText) = if (isOsm) {
+                binding.styleOptionOsm to binding.textOsm
+            } else {
+                binding.styleOptionSatellite to binding.textSatellite
+            }
+
+            val (unselectedCard, unselectedText) = if (isOsm) {
+                binding.styleOptionSatellite to binding.textSatellite
+            } else {
+                binding.styleOptionOsm to binding.textOsm
+            }
+
+            selectedCard.strokeColor = selectedColor
+            selectedText.setTextColor(selectedColor)
+
+            unselectedCard.strokeColor = unselectedStrokeColor
+            unselectedText.setTextColor(unselectedTextColor)
+
+            binding.contoursToggle.isChecked = showContours
+            binding.municipalitiesToggle.isChecked = showMunicipalities
+        }
+
+        fun applySelection(
+            newStyleType: MapStyle? = null,
+            newContours: Boolean? = null,
+            newMunicipalities: Boolean? = null
+        ) {
+            newStyleType?.let { styleType = it }
+            newContours?.let { showContours = it }
+            newMunicipalities?.let { showMunicipalities = it }
+
+            styleType = when (styleType) {
+                is MapStyle.OSM -> MapStyle.OSM(showContours, showMunicipalities)
+                is MapStyle.SATELLITE -> MapStyle.SATELLITE(showContours, showMunicipalities)
+            }
+
+            updateUI()
+        }
+
+        applySelection()
+
+        binding.styleOptionOsm.setOnClickListener {
+            applySelection(newStyleType = MapStyle.OSM(showContours, showMunicipalities))
+        }
+
+        binding.styleOptionSatellite.setOnClickListener {
+            applySelection(newStyleType = MapStyle.SATELLITE(showContours, showMunicipalities))
+        }
 
         binding.contoursToggle.setOnCheckedChangeListener { _, isChecked ->
-            currentSelection = when (currentSelection) {
-                is MapStyle.OSM -> MapStyle.OSM(isChecked)
-                is MapStyle.SATELLITE -> MapStyle.SATELLITE(isChecked)
-            }
+            applySelection(newContours = isChecked)
+        }
+
+        binding.municipalitiesToggle.setOnCheckedChangeListener { _, isChecked ->
+            applySelection(newMunicipalities = isChecked)
         }
 
         MaterialAlertDialogBuilder(context)
             .setView(binding.root)
             .setNegativeButton("Annulla", null)
             .setPositiveButton("Conferma") { _, _ ->
-                if (currentSelection != currentStyle) {
-                    onStyleSelected(currentSelection)
+                if (styleType != currentStyle) {
+                    onStyleSelected(styleType)
                 }
             }
             .show()

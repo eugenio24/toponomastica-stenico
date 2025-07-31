@@ -7,7 +7,8 @@ object MapConfig {
     val DEFAULT_LOCATION = LatLng(46.052168, 10.8540886)
     const val DEFAULT_ZOOM = 14.0
 
-    // todo adjust bounds if needed
+    const val DETAIL_ZOOM = 16.0
+
     private val LOCATION_BOUNDS = LatLngBounds.from(
         46.276000, 11.060000,
         45.978000, 10.655000

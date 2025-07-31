@@ -127,4 +127,14 @@
         android:checked="true"
         android:paddingTop="16dp"
         android:paddingBottom="8dp" />
+
+    <!-- Municipalities Toggle -->
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/municipalitiesToggle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mostra confini amministrativi"
+        android:checked="true"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp" />
 </LinearLayout>

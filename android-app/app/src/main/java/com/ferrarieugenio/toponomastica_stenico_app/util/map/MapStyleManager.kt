@@ -26,8 +26,10 @@ class MapStyleManager(private val context: Context) {
 
     private fun setupOsmStyle(): StyleSetupResult {
         val styleFile = copyAssetToInternal(OSM_STYLE_FILENAME)
+
         val mbtilesFile = copyAssetToInternal(MBTILES_FILENAME)
         val mbtilesFileContours = copyAssetToInternal(CONTOUR_MBTILES_FILENAME)
+        val mbtilesFileMunicipalities = copyAssetToInternal(MUNICIPALITY_MBTILES_FILENAME)
 
         var styleContent = styleFile.readText()
 
@@ -37,6 +39,9 @@ class MapStyleManager(private val context: Context) {
         ).replace(
             CONTOUR_FILE_URI_PLACEHOLDER,
             "mbtiles:///${mbtilesFileContours.absolutePath}"
+        ).replace(
+            MUNICIPALITY_FILE_URI_PLACEHOLDER,
+            "mbtiles:///${mbtilesFileMunicipalities.absolutePath}"
         )
 
         styleFile.writeText(styleContent)
@@ -54,8 +59,9 @@ class MapStyleManager(private val context: Context) {
 
         val styleFile = copyAssetToInternal(SATELLITE_STYLE_FILENAME)
 
-        val mbtilesFileContours = copyAssetToInternal(CONTOUR_MBTILES_FILENAME)
         val satelliteDir = File(context.filesDir, SatelliteDataManager.SATELLITE_FOLDER)
+        val mbtilesFileContours = copyAssetToInternal(CONTOUR_MBTILES_FILENAME)
+        val mbtilesFileMunicipalities = copyAssetToInternal(MUNICIPALITY_MBTILES_FILENAME)
 
         var styleContent = styleFile.readText()
 
@@ -65,6 +71,9 @@ class MapStyleManager(private val context: Context) {
         ).replace(
             CONTOUR_FILE_URI_PLACEHOLDER,
             "mbtiles:///${mbtilesFileContours.absolutePath}"
+        ).replace(
+            MUNICIPALITY_FILE_URI_PLACEHOLDER,
+            "mbtiles:///${mbtilesFileMunicipalities.absolutePath}"
         )
 
         styleFile.writeText(styleContent)
@@ -96,6 +105,9 @@ class MapStyleManager(private val context: Context) {
 
         private const val CONTOUR_MBTILES_FILENAME = "stenico-contours.mbtiles"
         private const val CONTOUR_FILE_URI_PLACEHOLDER = "___CONTOURS_FILE_URI___"
+
+        private const val MUNICIPALITY_MBTILES_FILENAME = "stenico-municipalities.mbtiles"
+        private const val MUNICIPALITY_FILE_URI_PLACEHOLDER = "___MUNICIPALITIES_FILE_URI___"
 
         private const val SATELLITE_FOLDER_URI_PLACEHOLDER = "___SATELLITE_FOLDER_URI___"
     }
