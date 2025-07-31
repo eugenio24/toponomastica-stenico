@@ -13,7 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.FragmentBookmarksBinding
 import com.ferrarieugenio.toponomastica_stenico_app.ui.adapters.BookmarkAdapter
 import com.ferrarieugenio.toponomastica_stenico_app.ui.dialogs.ExportDialogFragment
-import com.ferrarieugenio.toponomastica_stenico_app.util.exporter.FileExportUtils
+import com.ferrarieugenio.toponomastica_stenico_app.util.download.NotificationPermissionHelper
+import com.ferrarieugenio.toponomastica_stenico_app.util.exporter.ExportManager
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -26,7 +27,29 @@ class BookmarksFragment : Fragment() {
 
     private lateinit var adapter: BookmarkAdapter
 
-    private var pendingExportData: ByteArray? = null
+    private lateinit var exportManager: ExportManager
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            exportManager.notificationPermissionHelper.handlePermissionResult(
+                granted = isGranted,
+                onGranted = { },
+                onDenied = { }
+            )
+        }
+
+    private val createFileLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
+            exportManager.handleCreateDocumentResult(
+                uri,
+                createSuccessCallback = {
+                    Toast.makeText(requireContext(), "File salvato con successo", Toast.LENGTH_SHORT).show()
+                },
+                createFailCallback = {
+                    Toast.makeText(requireContext(), "Errore nel salvataggio del file o salvataggio annullato", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,6 +62,8 @@ class BookmarksFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        exportManager = ExportManager(requireContext(), NotificationPermissionHelper(requireContext(), requestPermissionLauncher))
 
         adapter = BookmarkAdapter(
             onToggleBookmark = { id ->
@@ -85,38 +110,12 @@ class BookmarksFragment : Fragment() {
             toponyms = toponyms,
             toponymRepository = repository,
             onExported = { exportedData, format, fileName ->
-                pendingExportData = exportedData
-
-                val safeName = FileExportUtils.getSuggestedFileName(fileName, format)
-                createFileLauncher.launch(safeName)
+                exportManager.prepareExport(exportedData, format, fileName)
+                exportManager.launchCreateDocument(createFileLauncher)
             }
         )
         dialog.show(parentFragmentManager, "export_dialog")
     }
-
-    private val createFileLauncher =
-        registerForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
-            if (uri != null && pendingExportData != null) {
-                val success = FileExportUtils.saveTextToUri(
-                    context = requireContext(),
-                    uri = uri,
-                    content = pendingExportData!!
-                )
-
-                Toast.makeText(
-                    requireContext(),
-                    if (success)
-                        "File salvato con successo"
-                    else
-                        "Errore nel salvataggio del file",
-                    Toast.LENGTH_SHORT
-                ).show()
-            } else {
-                Toast.makeText(requireContext(), "Salvataggio annullato", Toast.LENGTH_SHORT).show()
-            }
-
-            pendingExportData = null
-        }
 
     override fun onDestroyView() {
         super.onDestroyView()

@@ -1,10 +1,13 @@
 package com.ferrarieugenio.toponomastica_stenico_app.ui.main.detail
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -13,7 +16,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.ferrarieugenio.toponomastica_stenico_app.R
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.FragmentDetailBinding
 import com.ferrarieugenio.toponomastica_stenico_app.ui.adapters.NeighborAdapter
+import com.ferrarieugenio.toponomastica_stenico_app.ui.dialogs.ExportDialogFragment
+import com.ferrarieugenio.toponomastica_stenico_app.util.exporter.ExportFormat
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 
 @AndroidEntryPoint
 class DetailFragment : Fragment() {
@@ -45,13 +51,28 @@ class DetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.toolbar.apply {
-            title = args.toponym.nome
             setNavigationOnClickListener {
                 findNavController().navigateUp()
             }
+            setOnMenuItemClickListener{ item ->
+                when (item.itemId) {
+                    R.id.action_share -> {
+                        shareToponym()
+                        true
+                    }
+                    else -> false
+                }
+            }
         }
+        binding.toolbarTitleView.isSelected = true
 
         viewModel.toponym.observe(viewLifecycleOwner) { toponym ->
+            binding.toolbarTitleView.text = toponym.nome
+            binding.toolbarTitleView.setOnLongClickListener {
+                Toast.makeText(requireContext(), toponym.nome, Toast.LENGTH_LONG).show()
+                true
+            }
+
             if (!toponym.forma_ufficiale.isNullOrBlank()) {
                 binding.formaUfficialeTextView.text = toponym.forma_ufficiale
             } else {
@@ -133,6 +154,52 @@ class DetailFragment : Fragment() {
         binding.bookmarkToggleButton.setOnClickListener {
             viewModel.toggleBookmark()
         }
+    }
+
+    private fun shareToponym() {
+        val toponym = viewModel.toponym.value ?: return
+        val repository = viewModel.toponymRepository
+
+        val dialog = ExportDialogFragment(
+            toponym = toponym,
+            toponymRepository = repository,
+            onExported = { exportedData, format, fileName ->
+                val defaultName = viewModel.toponym.value?.nome.orEmpty()
+                    .trim()
+                    .replace(" ", "_")
+                val finalName = (fileName?.takeIf { it.isNotBlank() } ?: defaultName) + "." + format.fileExtension
+
+                shareExportedFile(exportedData, format, finalName)
+            }
+        )
+
+        dialog.show(parentFragmentManager, "exportDialog")
+    }
+
+    private fun shareExportedFile(
+        data: ByteArray,
+        format: ExportFormat,
+        fileName: String
+    ) {
+        val context = requireContext()
+        val file = File(context.cacheDir, fileName)
+
+        file.outputStream().use { it.write(data) }
+
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = format.mimeType
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, "Toponimo: $fileName")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        startActivity(Intent.createChooser(intent, "Condividi toponimo con..."))
     }
 
     override fun onDestroyView() {

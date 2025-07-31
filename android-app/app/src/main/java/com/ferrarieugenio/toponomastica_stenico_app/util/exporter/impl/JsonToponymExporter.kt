@@ -12,6 +12,10 @@ class JsonToponymExporter : ToponymExporter {
         return json.encodeToString(toponyms).toByteArray(Charsets.UTF_8)
     }
 
+    override fun export(toponym: Toponym): ByteArray {
+        return json.encodeToString(toponym).toByteArray(Charsets.UTF_8)
+    }
+
     override val fileExtension = "json"
     override val mimeType = "application/json"
     override val displayName = "JSON (raw)"

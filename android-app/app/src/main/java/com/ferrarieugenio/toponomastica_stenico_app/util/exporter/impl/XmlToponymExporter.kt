@@ -15,31 +15,46 @@ class XmlToponymExporter : ToponymExporter {
         xml.startDocument("UTF-8", true)
 
         xml.startTag(null, "toponyms")
-
         for (t in toponyms) {
-            xml.startTag(null, "toponym")
-
-            writeTag(xml, "id", t.id.toString())
-            writeTag(xml, "nome", t.nome)
-            writeTag(xml, "forma_ufficiale", t.forma_ufficiale ?: "")
-            writeTag(xml, "comune", t.comune)
-            writeTag(xml, "descrizione", t.descrizione)
-            writeTag(xml, "quota", t.quota.toString())
-            writeTag(xml, "lat", t.lat.toString())
-            writeTag(xml, "lon", t.lon.toString())
-
-            writeList(xml, "varianti", "variante", t.varianti)
-            writeList(xml, "tags", "tag", t.tags)
-            writeTag(xml, "cluster", t.cluster)
-            writeTag(xml, "hc_cluster", t.hc_cluster)
-            writeList(xml, "closest_5_neighbors_ids", "id", t.closest_5_neighbors_ids.map { it.toString() })
-
-            xml.endTag(null, "toponym")
+            writeToponym(xml, t)
         }
-
         xml.endTag(null, "toponyms")
+
         xml.endDocument()
         return output.toByteArray()
+    }
+
+    override fun export(toponym: Toponym): ByteArray {
+        val output = ByteArrayOutputStream()
+        val xml: XmlSerializer = Xml.newSerializer()
+        xml.setOutput(output, "UTF-8")
+        xml.startDocument("UTF-8", true)
+
+        writeToponym(xml, toponym)
+
+        xml.endDocument()
+        return output.toByteArray()
+    }
+
+    private fun writeToponym(xml: XmlSerializer, toponym: Toponym) {
+        xml.startTag(null, "toponym")
+
+        writeTag(xml, "id", toponym.id.toString())
+        writeTag(xml, "nome", toponym.nome)
+        writeTag(xml, "forma_ufficiale", toponym.forma_ufficiale ?: "")
+        writeTag(xml, "comune", toponym.comune)
+        writeTag(xml, "descrizione", toponym.descrizione)
+        writeTag(xml, "quota", toponym.quota.toString())
+        writeTag(xml, "lat", toponym.lat.toString())
+        writeTag(xml, "lon", toponym.lon.toString())
+
+        writeList(xml, "varianti", "variante", toponym.varianti)
+        writeList(xml, "tags", "tag", toponym.tags)
+        writeTag(xml, "cluster", toponym.cluster)
+        writeTag(xml, "hc_cluster", toponym.hc_cluster)
+        writeList(xml, "closest_5_neighbors_ids", "id", toponym.closest_5_neighbors_ids.map { it.toString() })
+
+        xml.endTag(null, "toponym")
     }
 
     private fun writeTag(xml: XmlSerializer, tag: String, value: String) {

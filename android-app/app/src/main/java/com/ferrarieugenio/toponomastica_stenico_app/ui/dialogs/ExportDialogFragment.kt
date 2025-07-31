@@ -27,6 +27,17 @@ class ExportDialogFragment(
     private var _binding: DialogExportBinding? = null
     private val binding get() = _binding!!
 
+    private var singleMode: Boolean = false
+
+    // secondary constructor for single-element export
+    constructor(
+        toponym: Toponym,
+        toponymRepository: ToponymRepository? = null,
+        onExported: (exportedData: ByteArray, format: ExportFormat, fileName: String?) -> Unit
+    ) : this(listOf(toponym), toponymRepository, onExported) {
+        singleMode = true
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.FullScreenDialogTheme)
@@ -42,6 +53,10 @@ class ExportDialogFragment(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        if(singleMode){
+            binding.dialogTitle.text = "Condividi toponimo"
+        }
 
         setupExportFormats()
 
@@ -63,7 +78,12 @@ class ExportDialogFragment(
                 val exportedStringResult = withContext(Dispatchers.Default) {
                     try {
                         val exporter = ExporterFactory.getExporter(selectedFormat, toponymRepository)
-                        exporter.export(toponyms)
+
+                        if (singleMode) {
+                            exporter.export(toponyms[0])    // custom exporter if only element
+                        } else {
+                            exporter.export(toponyms)
+                        }
                     } catch (ex: IllegalArgumentException) {
                         null // handle error below
                     }

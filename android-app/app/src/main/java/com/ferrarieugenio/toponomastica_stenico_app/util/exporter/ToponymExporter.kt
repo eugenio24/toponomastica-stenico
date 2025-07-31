@@ -4,6 +4,8 @@ import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
 
 interface ToponymExporter {
     fun export(toponyms: List<Toponym>): ByteArray
+    fun export(toponym: Toponym): ByteArray = export(listOf(toponym)) // default impl
+
     val fileExtension: String
     val mimeType: String
     val displayName: String

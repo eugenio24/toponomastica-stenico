@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DetailViewModel @Inject constructor(
-    private val toponymRepository: ToponymRepository,
+    val toponymRepository: ToponymRepository,
     private val bookmarkRepository: BookmarkRepository
 ) : ViewModel() {
 

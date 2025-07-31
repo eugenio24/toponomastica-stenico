@@ -19,14 +19,28 @@
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorSurface"
             android:elevation="4dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:title="Toponimo"
-            android:titleTextColor="?attr/colorOnSurface"
-            app:titleCentered="true"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            app:menu="@menu/menu_toponym_detail"
             app:navigationIcon="@drawable/ic_arrow_back"
             app:navigationIconTint="?attr/colorOnSurface"
-            app:popupTheme="@style/ThemeOverlay.Material3.Light" />
+            app:popupTheme="@style/ThemeOverlay.Material3.Light">
+
+            <TextView
+                android:id="@+id/toolbarTitleView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:singleLine="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:scrollHorizontally="true"
+                style="@style/TextAppearance.Material3.TitleLarge"/>
+
+        </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.card.MaterialCardView>
 
     <ScrollView

@@ -28,6 +28,17 @@ class GeoJsonToponymExporter : ToponymExporter {
         return json.encodeToString(featureCollection).toByteArray(Charsets.UTF_8)
     }
 
+    override fun export(toponym: Toponym): ByteArray {
+        val feature = GeoJsonFeature(
+            geometry = Geometry(
+                coordinates = listOf(toponym.lon, toponym.lat)
+            ),
+            properties = toponym
+        )
+
+        return json.encodeToString(feature).toByteArray(Charsets.UTF_8)
+    }
+
     override val fileExtension = "geojson"
     override val mimeType = "application/geo+json"
     override val displayName = "GeoJSON (GIS)"
