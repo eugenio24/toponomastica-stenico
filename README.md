@@ -71,18 +71,27 @@ This app is a hobby project, built for personal use. It is not a finished produc
     - This is required because the app is not distributed through the Google Play Store
 
 ### Features
-- Map view with displayed toponyms
-- Search page with filtering and sorting options
-- Detail page for each toponym with relevant informations
-- Basic GPS localization to show the user's current position
-- Offline support for both the map and data
+- **Map view** with displayed toponyms
+- **Satellite map view**, fully available offline
+- Optional **map layers**, including contour lines and administrative boundaries
+- **Search interface** with advanced *filtering* and *sorting* options
+- **Detail pages** for each toponym with comprehensive information 
+- **Bookmark** system to save toponyms
+- **Export** functionality for bookmarks, search results, and individual toponyms in multiple formats (PDF, GPX, GeoJSON and more)
+- Basic **GPS localization** to display the user’s current position on the map
+- **Offline** support for vector maps, satellite imagery, and toponym data
+- **Settings** page to manage downloaded satellite tiles and view app info
 
 ### Screenshots
 
-| Map View | Filters |
+| OSM-like Map | Satellite Map |
 |----------|---------|
-| ![Map View](screenshots/map_view.jpg) | ![Filters](screenshots/filters.jpg) |
+| ![OSM Map](screenshots/osm_map.jpg) | ![Satellite Map](screenshots/satellite_map.jpg) |
 
 | Search View | Detail View |
 |-------------|-------------|
-| ![Search View](screenshots/search_view.jpg) | ![Detail View](screenshots/detail_view.jpg) |
+| ![Search View](screenshots/search.jpg) | ![Detail View](screenshots/detail.jpg) |
+
+| Bookmarks | Filters |
+|-------------|-------------|
+| ![Bookmarks](screenshots/bookmarks.jpg) | ![Filters](screenshots/filters.jpg) |
