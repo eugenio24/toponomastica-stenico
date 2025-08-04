@@ -1,10 +1,13 @@
 package com.ferrarieugenio.toponomastica_stenico_app.util.map
 
-import android.content.Context
-import androidx.core.content.res.ResourcesCompat
-import com.ferrarieugenio.toponomastica_stenico_app.R
+import android.graphics.Bitmap
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
 import com.google.gson.JsonObject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.withContext
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
@@ -12,14 +15,13 @@ import org.maplibre.android.maps.Style
 import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolManager
 import org.maplibre.android.plugins.annotation.SymbolOptions
-import org.maplibre.android.utils.BitmapUtils
 
 
 class MapMarkerManager(
-    private val context: Context,
     private val mapView: MapView,
     private val map: MapLibreMap,
     private val style: Style,
+    private val iconCache: MarkerIconCache,
     private val onMarkerClick: (toponymId: Int) -> Unit
 ) {
     private val symbolManager: SymbolManager = SymbolManager(mapView, map, style).apply {
@@ -30,44 +32,116 @@ class MapMarkerManager(
     }
 
     private val symbolById = mutableMapOf<Int, Symbol>()
+    private val iconIdByToponymIdAndState = mutableMapOf<IconKey, String>()
+
+    private var currentToponyms: List<Toponym> = emptyList()
+    private var selectedId: Int? = null
+    private var showNamedMarkers = false
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    private val loadedStyleImages = mutableSetOf<String>()
 
     init {
         symbolManager.addClickListener { symbol ->
             symbol.data?.asJsonObject?.get("id")?.asInt?.let { onMarkerClick(it) }
             true
         }
-    }
 
-    fun initialize() {
-        initIcons(style)
-    }
+        map.addOnCameraIdleListener {
+            val zoom = map.cameraPosition.zoom
+            val newShowNamed = zoom >= ZOOM_THRESHOLD
+            if (newShowNamed != showNamedMarkers) {
+                showNamedMarkers = newShowNamed
 
-    private fun initIcons(style: Style) {
-        listOf(
-            MARKER_ICON_NAME_UNSELECTED to R.drawable.ic_marker_unselected,
-            MARKER_ICON_NAME_SELECTED to R.drawable.ic_marker_selected
-        ).forEach { (name, resId) ->
-            ResourcesCompat.getDrawable(context.resources, resId, null)?.let {
-                BitmapUtils.getBitmapFromDrawable(it)?.let { bmp ->
-                    style.addImage(name, bmp)
-                }
+                // re-render markers for zoom change
+                addMarkers(currentToponyms, selectedId)
+                // Re-apply selection to update icons after re-rendering
+                setSelectedId(selectedId)
             }
         }
     }
 
+    private fun loadDefaultMarkers() {
+        if (style.getImage(MARKER_ICON_NAME_UNSELECTED) == null) {
+            iconCache.getDefaultUnselectedBitmap().let { style.addImage(MARKER_ICON_NAME_UNSELECTED, it) }
+        }
+        if (style.getImage(MARKER_ICON_NAME_SELECTED) == null) {
+            iconCache.getDefaultSelectedBitmap().let { style.addImage(MARKER_ICON_NAME_SELECTED, it) }
+        }
+    }
+
+    suspend fun loadMarkerIcons(toponyms: List<Toponym>) {
+        withContext(Dispatchers.Main) {
+            loadDefaultMarkers()
+        }
+
+        val styleImagesToAdd = mutableListOf<Triple<String, Bitmap, IconKey>>()
+
+        withContext(Dispatchers.IO) {
+            for (toponym in toponyms) {
+                val id = toponym.id
+
+                val unselected = iconCache.getUnselectedBitmap(id)
+                val selected = iconCache.getSelectedBitmap(id)
+
+                unselected?.let {
+                    val iconId = "marker_unselected_named_$id"
+                    styleImagesToAdd.add(Triple(iconId, it, IconKey(
+                        id,
+                        isSelected = false,
+                        showName = true
+                    )))
+                }
+
+                selected?.let {
+                    val iconId = "marker_selected_named_$id"
+                    styleImagesToAdd.add(Triple(iconId, it, IconKey(
+                        id,
+                        isSelected = true,
+                        showName = true
+                    )))
+                }
+            }
+        }
+
+        // map interaction should happen in main thread
+        withContext(Dispatchers.Main) {
+            for ((iconId, bitmap, key) in styleImagesToAdd) {
+                addImageIfNotLoaded(iconId, bitmap)
+                iconIdByToponymIdAndState[key] = iconId
+            }
+        }
+    }
+
+
     fun addMarkers(toponyms: List<Toponym>, selectedId: Int?, onComplete: (() -> Unit)? = null) {
+        currentToponyms = toponyms
+        this.selectedId = selectedId
+
         symbolManager.deleteAll()
         symbolById.clear()
 
+        val iconSize = if (showNamedMarkers) NAMED_ICON_SCALE_FACTOR else 1.0f
+
         toponyms.forEach { toponym ->
-            val data = JsonObject().apply { addProperty("id", toponym.id) }
+            val data = JsonObject().apply {
+                addProperty("id", toponym.id)
+                addProperty("nome", toponym.nome)
+            }
+
+            val isSelected = toponym.id == selectedId
+            val fallback = if (isSelected) MARKER_ICON_NAME_SELECTED else MARKER_ICON_NAME_UNSELECTED
+            val iconId = iconIdByToponymIdAndState[
+                IconKey(toponym.id, isSelected, showNamedMarkers)
+            ] ?: fallback
+
             val symbol = symbolManager.create(
                 SymbolOptions()
                     .withLatLng(LatLng(toponym.lat, toponym.lon))
-                    .withIconImage(
-                        if (toponym.id == selectedId) MARKER_ICON_NAME_SELECTED
-                        else MARKER_ICON_NAME_UNSELECTED
-                    )
+                    .withIconImage(iconId)
+                    .withIconAnchor("top")
+                    .withIconSize(iconSize)
                     .withData(data)
             )
             symbolById[toponym.id] = symbol
@@ -76,15 +150,50 @@ class MapMarkerManager(
         onComplete?.invoke()
     }
 
-    fun updateSelection(prevId: Int?, newId: Int?) {
-        prevId?.let { symbolById[it]?.apply { iconImage = MARKER_ICON_NAME_UNSELECTED }?.let { symbolManager.update(it) } }
-        newId?.let { symbolById[it]?.apply { iconImage = MARKER_ICON_NAME_SELECTED }?.let { symbolManager.update(it) } }
+    fun setSelectedId(newSelectedId: Int?) {
+        if (newSelectedId == selectedId) return
+        val previousId = selectedId
+        selectedId = newSelectedId
+        updateSelection(previousId, newSelectedId)
     }
 
-    fun onDestroy() = symbolManager.onDestroy()
+    private fun updateSelection(prevId: Int?, newId: Int?) {
+        prevId?.let {
+            symbolById[it]?.let { symbol ->
+                val key = IconKey(it, false, showNamedMarkers)
+                val iconId = iconIdByToponymIdAndState[key] ?: MARKER_ICON_NAME_UNSELECTED
+                symbol.iconImage = iconId
+                symbolManager.update(symbol)
+            }
+        }
+        newId?.let {
+            symbolById[it]?.let { symbol ->
+                val key = IconKey(it, true, showNamedMarkers)
+                val iconId = iconIdByToponymIdAndState[key] ?: MARKER_ICON_NAME_SELECTED
+                symbol.iconImage = iconId
+                symbolManager.update(symbol)
+            }
+        }
+    }
+
+    private fun addImageIfNotLoaded(iconId: String, bitmap: Bitmap) {
+        if (iconId !in loadedStyleImages) {
+            style.addImage(iconId, bitmap)
+            loadedStyleImages.add(iconId)
+        }
+    }
+
+    fun onDestroy() {
+        symbolManager.onDestroy()
+        scope.cancel()
+    }
+
+    data class IconKey(val toponymId: Int, val isSelected: Boolean, val showName: Boolean)
 
     companion object {
+        private const val ZOOM_THRESHOLD = 16.0
         private const val MARKER_ICON_NAME_UNSELECTED = "marker-pin-unselected"
         private const val MARKER_ICON_NAME_SELECTED = "marker-pin-selected"
+        private const val NAMED_ICON_SCALE_FACTOR = 1.3f
     }
 }

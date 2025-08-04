@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.ferrarieugenio.toponomastica_stenico_app.R
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
@@ -21,11 +22,13 @@ import com.ferrarieugenio.toponomastica_stenico_app.util.map.MapConfig
 import com.ferrarieugenio.toponomastica_stenico_app.util.map.MapMarkerManager
 import com.ferrarieugenio.toponomastica_stenico_app.util.map.MapStyle
 import com.ferrarieugenio.toponomastica_stenico_app.util.map.MapStyleManager
+import com.ferrarieugenio.toponomastica_stenico_app.util.map.MarkerIconCache
 import com.ferrarieugenio.toponomastica_stenico_app.util.ui.SwipeGestureListener
 import com.ferrarieugenio.toponomastica_stenico_app.util.ui.ViewAnimatorUtils
 import com.ferrarieugenio.toponomastica_stenico_app.util.ui.createDetailShimmerPlaceholder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -34,6 +37,7 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MapFragment : Fragment() {
@@ -48,6 +52,7 @@ class MapFragment : Fragment() {
         MapStyleManager(requireContext())
     }
     private lateinit var currentMapStyle: MapStyle
+    @Inject lateinit var markerIconCache: MarkerIconCache
 
     private lateinit var locationHelper: LocationHelper
     private var isLocationActive = false
@@ -288,15 +293,14 @@ class MapFragment : Fragment() {
                 applyMunicipalitiesVisibility(style, currentMapStyle.showMunicipalities)
 
                 markerManager = MapMarkerManager(
-                    context = requireContext(),
                     mapView = mapView,
                     map = mapLibreMap,
                     style = style,
+                    iconCache = markerIconCache,
                     onMarkerClick = { toponymId ->
                         viewModel.selectToponymById(toponymId)
                     }
                 )
-                markerManager.initialize()
 
                 restoreMapState()
 
@@ -371,19 +375,21 @@ class MapFragment : Fragment() {
     private fun observeToponyms() {
         viewModel.toponyms.observe(viewLifecycleOwner) { toponyms ->
             if (isMapFullyReady && ::markerManager.isInitialized) {
-                displayToponyms(toponyms) {
-                    waitForNextFullRender {
-                        hideLoading()
+                viewLifecycleOwner.lifecycleScope.launch {
+
+                    if (!viewModel.iconsLoaded) {
+                        markerIconCache.preloadBitmaps(toponyms)
+                        viewModel.iconsLoaded = true
+                    }
+                    markerManager.loadMarkerIcons(toponyms)
+
+                    markerManager.addMarkers(toponyms, viewModel.selectedToponym.value?.id) {
+                        waitForNextFullRender {
+                            hideLoading()
+                        }
                     }
                 }
             }
-        }
-    }
-
-    private fun displayToponyms(toponyms: List<Toponym>, onDone: () -> Unit) {
-        val selectedId = viewModel.selectedToponym.value?.id
-        markerManager.addMarkers(toponyms, selectedId) {
-            onDone()
         }
     }
 
@@ -401,7 +407,7 @@ class MapFragment : Fragment() {
                 return@observe
             }
 
-            markerManager.updateSelection(viewModel.previousSelectedId, toponym?.id)
+            markerManager.setSelectedId(toponym?.id)
 
             if (toponym != null) {
                 showMarkerInfo(toponym)

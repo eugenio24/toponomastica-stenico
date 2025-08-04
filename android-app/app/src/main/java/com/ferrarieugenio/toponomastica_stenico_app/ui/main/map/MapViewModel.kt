@@ -22,35 +22,34 @@ class MapViewModel @Inject constructor(
     private val _toponyms = MutableLiveData<List<Toponym>>()
     val toponyms: LiveData<List<Toponym>> = _toponyms
 
-    var previousSelectedId: Int? = null     // needed for UI changes
     private val _selectedToponym = MutableLiveData<Toponym?>(null)
     val selectedToponym: LiveData<Toponym?> = _selectedToponym
+
+    var iconsLoaded: Boolean
+        get() = savedStateHandle.get<Boolean>("iconsLoaded") ?: false
+        set(value) {
+            savedStateHandle["iconsLoaded"] = value
+        }
 
     init {
         viewModelScope.launch {
             val list = repository.getToponyms()
             _toponyms.postValue(list)
 
-            // Restore selected toponym and previous id
+            // Restore selected toponym
             val selectedId = savedStateHandle.get<Int>("selectedId")
-            val previousId = savedStateHandle.get<Int>("previousSelectedId")
             val matched = list.find { it.id == selectedId }
-            previousSelectedId = previousId
             _selectedToponym.value = matched
         }
     }
 
     fun selectToponymById(id: Int?) {
-        previousSelectedId = selectedToponym.value?.id
-        savedStateHandle["previousSelectedId"] = previousSelectedId
         savedStateHandle["selectedId"] = id
         val matched = toponyms.value?.find { it.id == id }
         _selectedToponym.value = matched
     }
 
     fun clearSelectedToponym() {
-        previousSelectedId = selectedToponym.value?.id
-        savedStateHandle["previousSelectedId"] = previousSelectedId
         savedStateHandle.remove<Int>("selectedId")
         _selectedToponym.value = null
     }
