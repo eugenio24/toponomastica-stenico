@@ -6,7 +6,6 @@ import org.maplibre.android.geometry.LatLngBounds
 object MapConfig {
     val DEFAULT_LOCATION = LatLng(46.052168, 10.8540886)
     const val DEFAULT_ZOOM = 14.0
-
     const val DETAIL_ZOOM = 16.0
 
     private val LOCATION_BOUNDS = LatLngBounds.from(
@@ -28,4 +27,7 @@ object MapConfig {
 
         return LatLngBounds.from(bufferedNorth, bufferedEast, bufferedSouth, bufferedWest)
     }
+
+    const val DEFAULT_NAMED_MARKER_ZOOM_THRESHOLD = 16.0
+    const val NEVER_SHOW_NAMED_MARKER_THRESHOLD = MAX_ZOOM_BOUND + 0.1
 }

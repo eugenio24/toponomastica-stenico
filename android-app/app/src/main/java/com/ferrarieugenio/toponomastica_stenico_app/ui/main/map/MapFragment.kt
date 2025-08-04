@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.ferrarieugenio.toponomastica_stenico_app.R
 import com.ferrarieugenio.toponomastica_stenico_app.data.model.Toponym
+import com.ferrarieugenio.toponomastica_stenico_app.data.preferences.MapPreferencesManager
 import com.ferrarieugenio.toponomastica_stenico_app.databinding.FragmentMapBinding
 import com.ferrarieugenio.toponomastica_stenico_app.ui.dialogs.MapStyleSelectorDialog
 import com.ferrarieugenio.toponomastica_stenico_app.util.location.LocationHelper
@@ -28,6 +29,8 @@ import com.ferrarieugenio.toponomastica_stenico_app.util.ui.ViewAnimatorUtils
 import com.ferrarieugenio.toponomastica_stenico_app.util.ui.createDetailShimmerPlaceholder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
@@ -47,12 +50,17 @@ class MapFragment : Fragment() {
     private var onMapReady: (() -> Unit)? = null
     private var isMapFullyReady = false
 
+    @Inject lateinit var mapPreferencesManager: MapPreferencesManager
+
+    @Inject lateinit var markerIconCache: MarkerIconCache
     private lateinit var markerManager: MapMarkerManager
+    private var namedMarkersZoomThresholds: Double = MapConfig.DEFAULT_NAMED_MARKER_ZOOM_THRESHOLD
+
     private val mapStyleManager: MapStyleManager by lazy {
         MapStyleManager(requireContext())
     }
     private lateinit var currentMapStyle: MapStyle
-    @Inject lateinit var markerIconCache: MarkerIconCache
+
 
     private lateinit var locationHelper: LocationHelper
     private var isLocationActive = false
@@ -94,22 +102,33 @@ class MapFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        currentMapStyle = viewModel.getSavedMapStyle()
-
-        mapView = binding.mapView
-        setupMap()
-
         isLocationActive = savedInstanceState?.getBoolean("locationActive") ?: false
 
-        onMapReady = {
-            observeToponyms()
-            observeSelectedToponym()
-            setupUI()
+        mapView = binding.mapView
 
-            val toponym = consumeParcelableArgOnce<Toponym>("toponym")
-            if (toponym != null) {
-                pendingZoom = true
-                viewModel.selectToponymById(toponym.id)
+        lifecycleScope.launch {
+            namedMarkersZoomThresholds = mapPreferencesManager.zoomLevelForNamedMarkers.first()
+
+            currentMapStyle = if (viewModel.hasSavedMapStyle()) {
+                viewModel.getSavedMapStyle()
+            } else {
+                mapPreferencesManager.mapStyle.firstOrNull()?.also {
+                    viewModel.saveMapStyle(it)
+                } ?: MapStyle.default()
+            }
+
+            setupMap()
+
+            onMapReady = {
+                observeToponyms()
+                observeSelectedToponym()
+                setupUI()
+
+                val toponym = consumeParcelableArgOnce<Toponym>("toponym")
+                if (toponym != null) {
+                    pendingZoom = true
+                    viewModel.selectToponymById(toponym.id)
+                }
             }
         }
     }
@@ -297,6 +316,7 @@ class MapFragment : Fragment() {
                     map = mapLibreMap,
                     style = style,
                     iconCache = markerIconCache,
+                    namedMarkersZoomThresholds = namedMarkersZoomThresholds,
                     onMarkerClick = { toponymId ->
                         viewModel.selectToponymById(toponymId)
                     }

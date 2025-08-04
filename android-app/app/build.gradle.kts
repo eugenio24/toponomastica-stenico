@@ -80,4 +80,6 @@ dependencies {
     implementation (libs.android.sdk)
     implementation(libs.android.plugin.annotation.v9)
 
+    implementation(libs.androidx.datastore.preferences.core)
+    implementation(libs.androidx.datastore.preferences)
 }

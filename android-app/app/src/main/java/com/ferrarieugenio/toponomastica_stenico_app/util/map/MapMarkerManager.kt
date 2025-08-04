@@ -22,6 +22,7 @@ class MapMarkerManager(
     private val map: MapLibreMap,
     private val style: Style,
     private val iconCache: MarkerIconCache,
+    private val namedMarkersZoomThresholds: Double,
     private val onMarkerClick: (toponymId: Int) -> Unit
 ) {
     private val symbolManager: SymbolManager = SymbolManager(mapView, map, style).apply {
@@ -50,7 +51,7 @@ class MapMarkerManager(
 
         map.addOnCameraIdleListener {
             val zoom = map.cameraPosition.zoom
-            val newShowNamed = zoom >= ZOOM_THRESHOLD
+            val newShowNamed = zoom >= namedMarkersZoomThresholds
             if (newShowNamed != showNamedMarkers) {
                 showNamedMarkers = newShowNamed
 
@@ -191,7 +192,6 @@ class MapMarkerManager(
     data class IconKey(val toponymId: Int, val isSelected: Boolean, val showName: Boolean)
 
     companion object {
-        private const val ZOOM_THRESHOLD = 16.0
         private const val MARKER_ICON_NAME_UNSELECTED = "marker-pin-unselected"
         private const val MARKER_ICON_NAME_SELECTED = "marker-pin-selected"
         private const val NAMED_ICON_SCALE_FACTOR = 1.3f

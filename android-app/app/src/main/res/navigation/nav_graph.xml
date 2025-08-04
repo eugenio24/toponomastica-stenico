@@ -46,6 +46,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_appInfoFragment"
             app:destination="@+id/appInfoFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_mapPreferences"
+            app:destination="@+id/mapPreferences" />
     </fragment>
 
     <fragment
@@ -72,6 +75,11 @@
         android:id="@+id/appInfoFragment"
         android:name="com.ferrarieugenio.toponomastica_stenico_app.ui.main.settings.info.AppInfoFragment"
         android:label="App Info" />
+
+    <fragment
+        android:id="@+id/mapPreferences"
+        android:name="com.ferrarieugenio.toponomastica_stenico_app.ui.main.settings.mappreferences.MapPreferencesFragment"
+        android:label="Map Preferences" />
 
     <fragment
         android:id="@+id/bookmarksFragment"

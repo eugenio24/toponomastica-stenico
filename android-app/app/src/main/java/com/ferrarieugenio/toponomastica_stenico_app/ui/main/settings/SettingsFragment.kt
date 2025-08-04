@@ -38,6 +38,10 @@ class SettingsFragment : Fragment() {
         binding.appInfoRow.setOnClickListener {
             findNavController().navigate(R.id.action_settingsFragment_to_appInfoFragment)
         }
+
+        binding.mapPreferencesRow.setOnClickListener {
+            findNavController().navigate(R.id.action_settingsFragment_to_mapPreferences)
+        }
     }
 
     override fun onDestroyView() {

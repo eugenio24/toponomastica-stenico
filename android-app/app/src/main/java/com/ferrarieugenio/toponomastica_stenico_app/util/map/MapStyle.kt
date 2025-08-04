@@ -21,7 +21,7 @@ sealed class MapStyle(
         fun valueOf(
             value: String,
             showContours: Boolean,
-            showMunicipalities: Boolean = false
+            showMunicipalities: Boolean
         ): MapStyle {
             return when (value) {
                 "OSM" -> OSM(showContours, showMunicipalities)
@@ -29,5 +29,10 @@ sealed class MapStyle(
                 else -> throw IllegalArgumentException("No object MapStyle.$value")
             }
         }
+
+        fun default(): MapStyle = OSM(
+            showContours = true,
+            showMunicipalities = true
+        )
     }
 }

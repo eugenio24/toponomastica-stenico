@@ -23,5 +23,11 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <style name="Widget.App.SeekBar" parent="Widget.AppCompat.SeekBar">
+        <item name="android:progressTint">?attr/colorPrimary</item>
+        <item name="android:progressBackgroundTint">?attr/colorSurfaceVariant</item>
+        <item name="android:thumbTint">?attr/colorPrimary</item>
+    </style>
+
     <style name="Theme.Toponomasticastenicoapp" parent="Base.Theme.Toponomasticastenicoapp" />
 </resources>

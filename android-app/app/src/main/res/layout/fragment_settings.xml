@@ -68,6 +68,33 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
+            <!-- Map Preferences -->
+            <LinearLayout
+                android:id="@+id/mapPreferencesRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:id="@+id/mapPreferencesTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Preferenze Mappa"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/mapPreferencesSummary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Configura lo stile della mappa, la visualizzazione delle curve di livello, dei confini amministrativi e il livello di zoom a cui i pin scompaiono per mostrare solo il nome del toponimo."
+                    android:textSize="14sp" />
+            </LinearLayout>
+
             <!-- Info sull’app -->
             <LinearLayout
                 android:id="@+id/appInfoRow"

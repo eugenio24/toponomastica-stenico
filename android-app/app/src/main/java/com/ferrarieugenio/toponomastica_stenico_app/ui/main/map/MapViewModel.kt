@@ -60,12 +60,19 @@ class MapViewModel @Inject constructor(
         savedStateHandle["map_style_showMunicipalities"] = style.showMunicipalities
     }
 
-    fun getSavedMapStyle(): MapStyle {
-        val name = savedStateHandle.get<String>("map_style")
-        val showContours = savedStateHandle.get<Boolean>("map_style_showContours") ?: true
-        val showMunicipalities = savedStateHandle.get<Boolean>("map_style_showMunicipalities") ?: true
+    fun hasSavedMapStyle(): Boolean {
+        return savedStateHandle.contains("map_style")
+    }
 
-        return if (name != null) MapStyle.valueOf(name, showContours, showMunicipalities) else MapStyle.OSM(true)
+    fun getSavedMapStyle(): MapStyle {
+        return if (hasSavedMapStyle()) {
+            val name = savedStateHandle.get<String>("map_style")!!
+            val showContours = savedStateHandle.get<Boolean>("map_style_showContours") ?: true
+            val showMunicipalities = savedStateHandle.get<Boolean>("map_style_showMunicipalities") ?: true
+            MapStyle.valueOf(name, showContours, showMunicipalities)
+        } else {
+            MapStyle.default()
+        }
     }
 
     fun saveCameraPosition(position: CameraPosition) {
