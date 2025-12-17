@@ -80,7 +80,7 @@ This app is a hobby project, built for personal use. It is not a finished produc
 - **Export** functionality for bookmarks, search results, and individual toponyms in multiple formats (PDF, GPX, GeoJSON and more)
 - Basic **GPS localization** to display the user’s current position on the map
 - **Offline** support for vector maps, satellite imagery, and toponym data
-- **Settings** page to manage downloaded satellite tiles and view app info
+- **Settings** page to manage downloaded satellite tiles, map style preferences and app info
 
 ### Screenshots
 
