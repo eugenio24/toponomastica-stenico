@@ -22,14 +22,14 @@ This repository includes:
   * [Scraping script](data-utils/data-scraper.py)
 - Enhanced dataset with cleaned entries, elevation data, and cluster assignments, tags
 - Exploratory data analysis notebook  
-  * [Data analysis notebook](data-utils/data-analysis-cleaning.ipynb)
+  * [Data analysis notebook](data-utils/data_analysis_cleaning.ipynb)
 - An Android app for data visualization: see the [App section](#app)
 
 ---
 
 ## Data Enhancement
 
-All enhancements were performed in [`data-utils/data-analysis-cleaning.ipynb`](data-utils/data-analysis-cleaning.ipynb).
+All enhancements were performed in [`data-utils/data_analysis_cleaning.ipynb`](data-utils/data_analysis_cleaning.ipynb).
 
 Improvements:
 - Cleaned and standardized the raw scraped data
